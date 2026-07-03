@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>黃金財庫 - 頂級私銀雙軌資產系統</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Montserrat:wght@300;400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background: radial-gradient(circle at top, #141210 0%, #070605 100%);
+            color: #9ca3af; 
+            font-family: 'Montserrat', 'Noto Sans TC', sans-serif; 
+            letter-spacing: 0.5px;
+        }
+        .dashboard-header {
+            background: linear-gradient(180deg, #1c1917 0%, rgba(12, 10, 9, 0) 100%);
+            border-bottom: 1px solid rgba(212, 163, 89, 0.2);
+        }
+        .luxury-title {
+            font-family: 'Cinzel', 'Noto Sans TC', serif;
+            color: #d4af37; 
+            text-shadow: 0px 2px 10px rgba(212, 175, 55, 0.3);
+            font-weight: 700;
+        }
+        .card-luxury { 
+            background: rgba(26, 24, 22, 0.85);
+            border: 1px solid rgba(212, 175, 55, 0.15); 
+            border-radius: 16px; 
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(15px);
+            margin-bottom: 24px;
+        }
+
+        /* 頂部牌位調色 */
+        .stat-w { background: linear-gradient(135deg, #2d1f07 0%, #171003 100%); border: 1px solid #fbbf24; }
+        .text-label-w { color: #fbbf24 !important; font-weight: 700 !important; letter-spacing: 1.5px; }
+        .text-amount-w { color: #fffbeb !important; font-weight: 800 !important; text-shadow: 0 0 10px rgba(251, 191, 36, 0.5); }
+
+        .stat-q { background: linear-gradient(135deg, #051b28 0%, #020d14 100%); border: 1px solid #38bdf8; }
+        .text-label-q { color: #38bdf8 !important; font-weight: 700 !important; letter-spacing: 1.5px; }
+        .text-amount-q { color: #f0f9ff !important; font-weight: 800 !important; text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
+
+        .stat-total { background: linear-gradient(135deg, #241b05 0%, #110d02 100%); border: 1px solid #d4af37; }
+        .text-amount-total { color: #ffffff !important; font-weight: 800 !important; text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); }
+
+        .gold-title { color: #eab308 !important; font-weight: 700 !important; font-family: 'Cinzel', 'Noto Sans TC', sans-serif; letter-spacing: 1px; }
+
+        /* 純文字高對比色彩變化 */
+        .text-stock-blue { color: #3b82f6 !important; font-weight: 700 !important; } 
+        .text-buy-red { color: #ef4444 !important; font-weight: 700 !important; }     
+        .text-sell-green { color: #10b981 !important; font-weight: 700 !important; }  
+        .text-account-w { color: #f59e0b !important; font-weight: 700 !important; }   
+        .text-account-q { color: #38bdf8 !important; font-weight: 700 !important; }   
+        
+        /* 一般數據數據樣式 */
+        .num-general { color: #9ca3af !important; font-family: 'JetBrains Mono', monospace; } 
+        .profit-positive { color: #10b981 !important; font-weight: 700; } 
+        .profit-negative { color: #ef4444 !important; font-weight: 700; } 
+        
+        /* 👑 核心優化：庫存水位與均價一律採用高反差溫和白底深灰色字標籤 */
+        .num-white-badge {
+            background-color: #f1f5f9 !important; /* 絲綢暖白底 */
+            color: #374151 !important;           /* 穩重深灰字 */
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700 !important;
+            padding: 3px 10px;
+            border-radius: 6px;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 表單與輸入標記 */
+        .form-group-luxury { position: relative; margin-bottom: 1.2rem; }
+        .form-control-luxury, .form-select-luxury {
+            background-color: #0f0e0d !important;
+            border: 1px solid #44403c !important;
+            color: #fafaf9 !important;
+            border-radius: 8px;
+            padding: 10px 14px;
+        }
+        .form-control-luxury:focus, .form-select-luxury:focus {
+            border-color: #d4af37 !important;
+            box-shadow: 0 0 12px rgba(212, 175, 55, 0.3) !important;
+        }
+        .label-luxury { color: #9ca3af; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; display: block; }
+        
+        .table-luxury { color: #9ca3af; margin-bottom: 0; vertical-align: middle; }
+        .table-luxury thead { background-color: #0f0e0d; color: #d4af37; font-weight: 700; border-bottom: 2px solid rgba(212,175,55,0.3); }
+        .table-luxury tr { border-bottom: 1px solid rgba(68, 64, 60, 0.3); }
+        
+        /* 內聯編輯框樣式 */
+        .inline-edit-input {
+            background-color: #171513 !important;
+            border: 1px solid #d4af37 !important;
+            color: #ffffff !important;
+            width: 90%;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .btn-gold { background: linear-gradient(135deg, #c5a028 0%, #9a7b1c 100%); color: #0c0a09; font-weight: 700; border: none; }
+        .btn-gold:hover { background: linear-gradient(135deg, #d4af37 0%, #c5a028 100%); box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
+        .btn-luxury-outline { background: transparent; border: 1px solid #d4af37; color: #d4af37; font-weight: 600; }
+        .btn-luxury-outline:hover { background: #d4af37; color: #0c0a09; }
+
+        .scroll-container { max-height: 380px; overflow-y: auto; border-radius: 8px; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0c0a09; }
+        ::-webkit-scrollbar-thumb { background: #44403c; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #d4af37; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-header py-4 px-5 mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="luxury-title m-0">👑 GOLDEN VAULT GLOBAL</h2>
+        <span class="text-muted small" style="letter-spacing: 2px;">雙軌制頂級私銀資產大腦系統</span>
+    </div>
+    <div>
+        <span class="badge bg-transparent border border-success text-success px-3 py-2" id="statusBadge">🟢 全球資產配置帳本就緒</span>
+    </div>
+</div>
+
+<div class="container-fluid px-5">
+    <div class="row mb-2">
+        <div class="col-xl-3 col-sm-6 mb-4">
+            <div class="card card-luxury p-4 stat-w">
+                <span class="text-label-w small d-block mb-1">ACCOUNT W · 投入金額</span>
+                <h3 id="sumW" class="text-amount-w mb-0">$ 0</h3>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 mb-4">
+            <div class="card card-luxury p-4 stat-q">
+                <span class="text-label-q small d-block mb-1">ACCOUNT Q · 投入金額</span>
+                <h3 id="sumQ" class="text-amount-q mb-0">$ 0</h3>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 mb-4">
+            <div class="card card-luxury p-4 stat-total">
+                <span class="text-warning small fw-bold d-block mb-1" style="letter-spacing: 1px; color: #fcd34d !important;">TOTAL VAULT · 雙帳戶總庫</span>
+                <h3 id="sumTotal" class="text-amount-total mb-0">$ 0</h3>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 mb-4">
+            <div class="card card-luxury p-4" style="background: linear-gradient(135deg, #09261b 0%, #04120d 100%); border: 1px solid #10b981; box-shadow: 0 0 15px rgba(16,185,129,0.15);">
+                <span class="small fw-bold d-block mb-1" style="color: #34d399 !important; letter-spacing: 1px;">PROFIT · 累計已實現投資收益</span>
+                <h3 id="totalProfit" class="fw-bold text-sell-green mb-0" style="text-shadow: 0 0 10px rgba(16,185,129,0.5); font-weight: 800;">+$ 0</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-4 col-lg-5">
+            <div class="card card-luxury p-4">
+                <h5 class="fw-bold mb-3 gold-title">📁 DATA SYNC | 帳本對接</h5>
+                <div class="mb-3">
+                    <input type="file" id="csvFileInput" class="form-control" accept=".csv">
+                </div>
+                <button class="btn btn-gold w-100 py-2" onclick="exportCSV()">💾 導出尊榮加密帳本 (Excel)</button>
+            </div>
+
+            <div class="card card-luxury p-4">
+                <h5 class="fw-bold mb-4 gold-title">➕ TRANSACTION | 寫入交易</h5>
+                <form id="txForm">
+                    <div class="form-group-luxury">
+                        <label class="label-luxury">📝 股票名稱 / 代號</label>
+                        <input type="text" id="stock" class="form-control form-control-luxury enter-nav w-100" placeholder="如: 聯電" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group-luxury">
+                                <label class="label-luxury">💰 成交價格</label>
+                                <input type="number" id="price" class="form-control form-control-luxury enter-nav w-100" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group-luxury">
+                                <label class="label-luxury">📊 交易股數</label>
+                                <input type="number" id="shares" class="form-control form-control-luxury enter-nav w-100" step="1" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group-luxury">
+                                <label class="label-luxury">🔄 交易型態</label>
+                                <select id="status" class="form-select form-select-luxury enter-nav w-100">
+                                    <option value="買進">買進</option>
+                                    <option value="賣出">賣出</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group-luxury">
+                                <label class="label-luxury">💳 配置帳戶</label>
+                                <input type="text" id="account" class="form-control form-control-luxury enter-nav w-100" placeholder="W / Q" required style="text-transform: uppercase;">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="btnSubmit" class="btn btn-luxury-outline w-100 py-2.5 mt-2" onclick="addRecord()">安全寫入記憶體</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-xl-8 col-lg-7">
+            <div class="card card-luxury p-4">
+                <h5 class="fw-bold mb-3 gold-title">📈 CURRENT INVENTORY | 即時現股庫存狀態</h5>
+                <div class="scroll-container" style="border: 1px solid rgba(212,175,55,0.15);">
+                    <table class="table table-luxury table-hover align-middle">
+                        <thead>
+                            <tr class="small">
+                                <th>資產標的</th>
+                                <th class="text-end">持有總股數</th>
+                                <th class="text-end">持倉成本均價</th>
+                                <th class="text-end">目前總成本</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryBody" class="small">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-luxury p-4">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-3 gap-2">
+                    <h5 class="fw-bold mb-0 gold-title">📜 ARCHIVE LEDGER | 完整歷史對帳單與收益標註</h5>
+                    <div style="max-width: 300px; width: 100%;">
+                        <input type="text" id="searchBar" class="form-control form-control-luxury form-control-sm" placeholder="🔍 快速檢索標的、帳戶、收益..." onkeyup="filterTable()">
+                    </div>
+                </div>
+                <div class="scroll-container" style="max-height: 450px; border: 1px solid rgba(212,175,55,0.15);">
+                    <table class="table table-luxury table-hover align-middle" id="detailTable">
+                        <thead>
+                            <tr class="small text-center">
+                                <th>交易時間戳記</th>
+                                <th>標的</th>
+                                <th class="text-end">交易單價</th>
+                                <th>型態</th>
+                                <th class="text-end">股數</th>
+                                <th class="text-end">庫存水位</th>
+                                <th class="text-end">持倉均價</th>
+                                <th>帳戶</th>
+                                <th class="text-end">成交金額</th>
+                                <th class="text-end">交易實現收益</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody" class="small">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 歷史核心資料庫：內嵌您完整的歷史資產紀錄
+    let rawHistory = [{"timestamp": "2026-06-18 18:55:44", "email": "a528722@gmail.com", "stock": "聯電", "price": 130.0, "status": "買進", "shares": 1000, "account": "W"}, {"timestamp": "2026-06-18 18:56:11", "email": "a528722@gmail.com", "stock": "聯電", "price": 122.5, "status": "買進", "shares": 1000, "account": "W"}, {"timestamp": "2026-06-18 18:56:34", "email": "a528722@gmail.com", "stock": "群聯", "price": 2320.0, "status": "買進", "shares": 5, "account": "W"}, {"timestamp": "2026-06-18 18:57:00", "email": "a528722@gmail.com", "stock": "群聯", "price": 2315.0, "status": "買進", "shares": 10, "account": "W"}, {"timestamp": "2026-06-18 18:57:20", "email": "a528722@gmail.com", "stock": "頎邦", "price": 236.0, "status": "買進", "shares": 1000, "account": "W"}, {"timestamp": "2026-06-18 18:59:01", "email": "a528722@gmail.com", "stock": "台燿", "price": 1565.0, "status": "買進", "shares": 10, "account": "W"}, {"timestamp": "2026-06-18 18:59:29", "email": "a528722@gmail.com", "stock": "臻鼎", "price": 549.0, "status": "買進", "shares": 25, "account": "W"}, {"timestamp": "2026-06-18 18:59:52", "email": "a528722@gmail.com", "stock": "尖點", "price": 511.0, "status": "買進", "shares": 25, "account": "W"}, {"timestamp": "2026-06-18 19:00:22", "email": "a528722@gmail.com", "stock": "群聯", "price": 2320.0, "status": "買進", "shares": 25, "account": "W"}, {"timestamp": "2026-06-18 19:01:01", "email": "a528722@gmail.com", "stock": "台燿", "price": 1565.0, "status": "買進", "shares": 20, "account": "W"}, {"timestamp": "2026-06-18 19:01:25", "email": "a528722@gmail.com", "stock": "台達電", "price": 2255.0, "status": "買進", "shares": 40, "account": "W"}, {"timestamp": "2026-06-18 19:01:51", "email": "a528722@gmail.com", "stock": "力成", "price": 348.5, "status": "買進", "shares": 50, "account": "W"}, {"timestamp": "2026-06-18 19:02:32", "email": "a528722@gmail.com", "stock": "台燿", "price": 1625.0, "status": "買進", "shares": 10, "account": "W"}, {"timestamp": "2026-06-18 19:02:57", "email": "a528722@gmail.com", "stock": "臻鼎", "price": 638.0, "status": "買進", "shares": 50, "account": "W"}, {"timestamp": "2026-06-18 19:03:25", "email": "a528722@gmail.com", "stock": "台達電", "price": 2165.0, "status": "買進", "shares": 20, "account": "W"}, {"timestamp": "2026-06-18 19:05:06", "email": "a528722@gmail.com", "stock": "景碩", "price": 706.0, "status": "買進", "shares": 70, "account": "Q"}, {"timestamp": "2026-06-18 19:05:22", "email": "a528722@gmail.com", "stock": "景碩", "price": 709.0, "status": "買進", "shares": 40, "account": "Q"}, {"timestamp": "2026-06-18 19:06:02", "email": "a528722@gmail.com", "stock": "景碩", "price": 715.0, "status": "買進", "shares": 60, "account": "Q"}, {"timestamp": "2026-06-22 09:32:52", "email": "", "stock": "中探針", "price": 250.5, "status": "買進", "shares": 50, "account": "W"}, {"timestamp": "2026-06-22 09:34:28", "email": "", "stock": "今國光", "price": 98.5, "status": "買進", "shares": 1000, "account": "Q"}, {"timestamp": "2026-06-22 09:41:02", "email": "", "stock": "今國光", "price": 100.0, "status": "買進", "shares": 1000, "account": "W"}, {"timestamp": "2026-06-22 13:26:27", "email": "", "stock": "台燿", "price": 1900.0, "status": "買進", "shares": 10, "account": "W"}, {"timestamp": "2026-06-22 13:27:42", "email": "", "stock": "臻鼎", "price": 634.0, "status": "買進", "shares": 20, "account": "W"}, {"timestamp": "2026-06-22 13:28:57", "email": "", "stock": "力成", "price": 370.0, "status": "買進", "shares": 35, "account": "W"}, {"timestamp": "2026-06-23 11:26:02", "email": "", "stock": "臻鼎", "price": 590.0, "status": "買進", "shares": 20, "account": "W"}, {"timestamp": "2026-06-24 10:47:18", "email": "", "stock": "京元電子", "price": 331.0, "status": "買進", "shares": 100, "account": "W"}, {"timestamp": "2026-06-25 10:30:09", "email": "", "stock": "群聯", "price": 2590.0, "status": "買進", "shares": 40, "account": "Q"}, {"timestamp": "2026-06-25 10:30:33", "email": "", "stock": "京元電子", "price": 331.0, "status": "買進", "shares": 500, "account": "Q"}, {"timestamp": "2026-06-26 23:55:24", "email": "", "stock": "頎邦", "price": 219.0, "status": "買進", "shares": 200, "account": "Q"}, {"timestamp": "2026-06-26 23:55:45", "email": "", "stock": "全新", "price": 349.5, "status": "買進", "shares": 150, "account": "Q"}, {"timestamp": "2026-06-26 23:56:05", "email": "", "stock": "環球晶", "price": 936.0, "status": "買進", "shares": 50, "account": "Q"}, {"timestamp": "2026-06-26 23:56:24", "email": "", "stock": "富鼎", "price": 251.0, "status": "買進", "shares": 300, "account": "Q"}, {"timestamp": "2026-06-26 23:56:40", "email": "", "stock": "今國光", "price": 83.0, "status": "買進", "shares": 1000, "account": "Q"}, {"timestamp": "2026-06-26 23:57:18", "email": "", "stock": "京元電子", "price": 317.0, "status": "買進", "shares": 250, "account": "Q"}, {"timestamp": "2026-07-01 14:06:29", "email": "", "stock": "台達電", "price": 2010.0, "status": "買進", "shares": 10, "account": "W"}, {"timestamp": "2026-07-01 14:06:47", "email": "", "stock": "群聯", "price": 2295.0, "status": "買進", "shares": 10, "account": "W"}, {"timestamp": "2026-07-01 14:07:25", "email": "", "stock": "台燿", "price": 1700.0, "status": "買進", "shares": 10, "account": "W"}, {"timestamp": "2026-07-01 14:12:58", "email": "", "stock": "景碩", "price": 915.0, "status": "買進", "shares": 80, "account": "Q"}, {"timestamp": "2026-07-01 14:22:56", "email": "", "stock": "台積電", "price": 2445.0, "status": "買進", "shares": 5, "account": "W"}, {"timestamp": "2026-07-01 14:23:12", "email": "", "stock": "台積電", "price": 2440.0, "status": "買進", "shares": 10, "account": "W"}, {"timestamp": "2026-07-02 18:48:49", "email": "", "stock": "景碩", "price": 845.0, "status": "買進", "shares": 50, "account": "Q"}, {"timestamp": "2026-07-02 18:49:12", "email": "", "stock": "擎亞", "price": 153.0, "status": "買進", "shares": 100, "account": "W"}];
+
+    let records = [];
+    let realizedProfitTotal = 0;
+    let currentStockPool = {}; 
+
+    function renderSystem(dataArray) {
+        records = [];
+        realizedProfitTotal = 0;
+        currentStockPool = {};
+
+        dataArray.forEach(item => {
+            const subtotal = Math.round(item.price * item.shares);
+            if (!currentStockPool[item.stock]) {
+                currentStockPool[item.stock] = { totalShares: 0, avgPrice: 0 };
+            }
+
+            let last = currentStockPool[item.stock];
+            let totalShares = 0;
+            let avgPrice = 0;
+            let txProfit = 0; 
+
+            if (item.status === '買進') {
+                totalShares = last.totalShares + item.shares;
+                avgPrice = totalShares > 0 ? ((last.avgPrice * last.totalShares) + subtotal) / totalShares : 0;
+            } else {
+                totalShares = last.totalShares - item.shares;
+                avgPrice = last.avgPrice; 
+                txProfit = Math.round((item.price - last.avgPrice) * item.shares);
+                realizedProfitTotal += txProfit;
+            }
+
+            currentStockPool[item.stock] = { totalShares: totalShares, avgPrice: avgPrice };
+
+            records.push({
+                timestamp: item.timestamp,
+                email: item.email || '',
+                stock: item.stock,
+                price: item.price,
+                status: item.status,
+                shares: item.shares,
+                totalShares: totalShares,
+                avgPrice: Math.round(avgPrice * 100) / 100,
+                profit: txProfit, 
+                account: item.account.toUpperCase(),
+                subtotal: subtotal
+            });
+        });
+        updateUI();
+    }
+
+    document.getElementById('csvFileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) { parseCSV(evt.target.result); };
+        reader.readAsText(file, 'UTF-8');
+    });
+
+    function parseCSV(text) {
+        const lines = text.split('\n');
+        let tempArray = [];
+        for(let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if(!line) continue;
+            const cols = line.split(',');
+            if(cols.length < 10) continue;
+            tempArray.push({
+                timestamp: cols[0], email: cols[1], stock: cols[2],
+                price: parseFloat(cols[3]) || 0, status: cols[4],
+                shares: parseInt(cols[5]) || 0, account: cols[9]
+            });
+        }
+        rawHistory = tempArray;
+        renderSystem(rawHistory);
+    }
+
+    function addRecord() {
+        const stock = document.getElementById('stock').value.trim();
+        const price = parseFloat(document.getElementById('price').value);
+        const shares = parseInt(document.getElementById('shares').value);
+        const status = document.getElementById('status').value;
+        const account = document.getElementById('account').value.trim().toUpperCase();
+
+        if(!stock || isNaN(price) || isNaN(shares) || !account) {
+            alert('❌ 請完整填寫交易參數欄位。');
+            return;
+        }
+
+        const now = new Date();
+        const timestamp = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours())+ ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
+
+        rawHistory.push({
+            timestamp: timestamp, email: '', stock: stock,
+            price: price, status: status, shares: shares, account: account
+        });
+
+        renderSystem(rawHistory);
+        document.getElementById('txForm').reset();
+        document.getElementById('stock').focus();
+    }
+
+    function makeEditable(cell, index, fieldKey) {
+        cell.addEventListener('dblclick', function() {
+            if (cell.querySelector('input')) return;
+
+            const originalValue = cell.innerText.replace(/[+$ ,\s元股]/g, '');
+            const input = document.createElement('input');
+            input.type = fieldKey === 'price' || fieldKey === 'shares' ? 'number' : 'text';
+            input.className = 'inline-edit-input';
+            input.value = originalValue;
+            
+            cell.innerHTML = '';
+            cell.appendChild(input);
+            input.focus();
+
+            function commitChange() {
+                let newValue = input.value.trim();
+                if (newValue !== "") {
+                    if (fieldKey === 'price') rawHistory[index].price = parseFloat(newValue);
+                    else if (fieldKey === 'shares') rawHistory[index].shares = parseInt(newValue);
+                    else if (fieldKey === 'stock') rawHistory[index].stock = newValue;
+                    else if (fieldKey === 'status') rawHistory[index].status = newValue;
+                    else if (fieldKey === 'account') rawHistory[index].account = newValue.toUpperCase();
+                    renderSystem(rawHistory);
+                } else {
+                    renderSystem(rawHistory);
+                }
+            }
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') commitChange();
+            });
+            input.addEventListener('blur', commitChange);
+        });
+    }
+
+    function updateUI() {
+        const historyBody = document.getElementById('historyBody');
+        historyBody.innerHTML = '';
+
+        for (let i = records.length - 1; i >= 0; i--) {
+            const r = records[i];
+            const statusClass = r.status === '買進' ? 'text-buy-red' : 'text-sell-green';
+            const accountClass = r.account === 'W' ? 'text-account-w' : 'text-account-q';
+            
+            let profitTdStr = '<td class="text-end num-general">-</td>';
+            if(r.status === '賣出') {
+                profitTdStr = r.profit >= 0 
+                    ? `<td class="text-end font-monospace profit-positive">+$ ${r.profit.toLocaleString()}</td>` 
+                    : `<td class="text-end font-monospace profit-negative">-$ ${Math.abs(r.profit).toLocaleString()}</td>`;
+            }
+
+            const tr = document.createElement('tr');
+            tr.className = 'bg-transparent';
+            tr.innerHTML = `
+                <td class="text-center num-general">${r.timestamp}</td>
+                <td class="editable-cell text-stock-blue" data-id="${i}" data-field="stock">${r.stock}</td>
+                <td class="editable-cell text-end font-monospace num-general" data-id="${i}" data-field="price">${r.price.toFixed(2)}</td>
+                <td class="editable-cell text-center ${statusClass}" data-id="${i}" data-field="status">${r.status}</td>
+                <td class="editable-cell text-end font-monospace num-general" data-id="${i}" data-field="shares">${r.shares.toLocaleString()}</td>
+                <td class="text-end"><span class="num-white-badge">${r.totalShares.toLocaleString()}</span></td>
+                <td class="text-end"><span class="num-white-badge">${r.avgPrice.toFixed(2)}</span></td>
+                <td class="editable-cell text-center"><span class="${accountClass}">${r.account}</span></td>
+                <td class="text-end font-monospace num-general" style="font-weight:600;">${r.subtotal.toLocaleString()}</td>
+                ${profitTdStr}
+            `;
+
+            tr.querySelectorAll('.editable-cell').forEach(cell => {
+                const id = parseInt(cell.getAttribute('data-id'));
+                const field = cell.getAttribute('data-field');
+                const targetField = field ? field : 'account';
+                const targetCell = field ? cell : tr.cells[7];
+                makeEditable(targetCell, id, targetField);
+            });
+
+            historyBody.appendChild(tr);
+        }
+
+        let sumW = 0, sumQ = 0;
+        records.forEach(r => {
+            if(r.account === 'W') sumW += r.subtotal;
+            if(r.account === 'Q') sumQ += r.subtotal;
+        });
+        
+        document.getElementById('sumW').innerText = '$ ' + sumW.toLocaleString();
+        document.getElementById('sumQ').innerText = '$ ' + sumQ.toLocaleString();
+        document.getElementById('sumTotal').innerText = '$ ' + (sumW + sumQ).toLocaleString();
+        
+        const pField = document.getElementById('totalProfit');
+        pField.innerText = (realizedProfitTotal >= 0 ? '+$ ' : '-$ ') + Math.abs(realizedProfitTotal).toLocaleString();
+        pField.className = realizedProfitTotal >= 0 ? "fw-bold profit-positive mb-0" : "fw-bold profit-negative mb-0";
+
+        const inventoryBody = document.getElementById('inventoryBody');
+        inventoryBody.innerHTML = '';
+
+        for(let stock in currentStockPool) {
+            const r = currentStockPool[stock];
+            if(r.totalShares > 0) {
+                const totalCost = Math.round(r.totalShares * r.avgPrice);
+                // ✨ 即時現股成本均價與股數：同步套用白底深灰字標籤
+                inventoryBody.innerHTML += `
+                    <tr class="bg-transparent">
+                        <td><span class="text-stock-blue">${stock}</span></td>
+                        <td class="text-end"><span class="num-white-badge">${r.totalShares.toLocaleString()} 股</span></td>
+                        <td class="text-end"><span class="num-white-badge">${r.avgPrice.toFixed(2)} 元</span></td>
+                        <td class="text-end font-monospace num-general" style="font-weight: 600;">${totalCost.toLocaleString()} 元</td>
+                    </tr>
+                `;
+            }
+        }
+    }
+
+    function exportCSV() {
+        if(rawHistory.length === 0) {
+            alert('⚠️ 無有效數據。');
+            return;
+        }
+        let csvContent = "\uFEFF時間戳記,電子郵件地址,股票,價格,狀態,股數,總計股數,均價,損益,帳戶,小計\n";
+        records.forEach(r => {
+            csvContent += `${r.timestamp},${r.email},${r.stock},${r.price},${r.status},${r.shares},${r.totalShares},${r.avgPrice},${r.profit},${r.account},${r.subtotal}\n`;
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "黃金財庫 (回覆).xlsx - 表單回覆 1.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function filterTable() {
+        const input = document.getElementById("searchBar").value.toUpperCase();
+        const rows = document.getElementById("detailTable").getElementsByTagName("tr");
+        for (let i = 1; i < rows.length; i++) {
+            let row = rows[i];
+            if (row) {
+                let text = row.textContent || row.innerText;
+                row.style.display = text.toUpperCase().indexOf(input) > -1 ? "" : "none";
+            }
+        }
+    }
+
+    const inputs = Array.from(document.querySelectorAll('.enter-nav'));
+    inputs.forEach((input, index) => {
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                } else {
+                    addRecord();
+                }
+            }
+        });
+    });
+
+    renderSystem(rawHistory);
+</script>
+
+</body>
+</html>
