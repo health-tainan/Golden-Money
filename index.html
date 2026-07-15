@@ -1,0 +1,2151 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>黃金財庫 - 頂級私銀雙軌資產行動同步系統 (直達免密版)</title>
+    <!-- Tailwind CSS & Bootstrap Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght=500;700&family=Montserrat:wght=300;400;600;700&family=Noto+Sans+TC:wght=300;400;500;700&display=swap" rel="stylesheet">
+    <!-- SheetJS for Excel (.xlsx / .xls) parsing directly in browser -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- STREAMING_CHUNK: Styling the luxury private banking interface -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            50: '#fbf7eb',
+                            100: '#f4eacf',
+                            200: '#e9d59f',
+                            300: '#dbb966',
+                            400: '#cd9b38',
+                            500: '#b8860b',
+                            600: '#9b6e1c',
+                            700: '#7c5418',
+                            800: '#644317',
+                            900: '#533716',
+                            950: '#301e0a',
+                        },
+                        darkbg: {
+                            deep: '#070605',
+                            card: '#141210',
+                            input: '#1c1917',
+                            border: '#2e2720'
+                        }
+                    },
+                    fontFamily: {
+                        cinzel: ['Cinzel', 'serif'],
+                        sans: ['Montserrat', 'Noto Sans TC', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: radial-gradient(circle at top, #181512 0%, #070605 100%);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #fceabe 0%, #ecc17a 50%, #b8860b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gold-border-gradient {
+            border-image: linear-gradient(to right, #b8860b, #ecc17a, #301e0a) 1;
+        }
+        .premium-card {
+            background: linear-gradient(145deg, #161311 0%, #0d0b0a 100%);
+            border: 1px solid rgba(184, 134, 11, 0.15);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.7);
+        }
+        .premium-card:hover {
+            border-color: rgba(184, 134, 11, 0.4);
+            box-shadow: 0 15px 35px -5px rgba(184, 134, 11, 0.1);
+            transform: translateY(-2px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #070605;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2e2720;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #b8860b;
+        }
+        
+        @keyframes pulse-green {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .animate-pulse-green {
+            animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="font-sans text-stone-300 min-h-screen pb-12">
+
+<!-- STREAMING_CHUNK: Preparing Crash Banner and Custom Login Overlay -->
+<div id="jsCrashBanner" class="hidden bg-red-950/90 border-b border-red-500 text-red-200 px-4 py-3 text-xs md:text-sm font-medium sticky top-0 z-[200] backdrop-blur-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shadow-lg">
+    <div class="flex items-start gap-2">
+        <i class="bi bi-bug-fill text-red-400 text-base mt-0.5"></i>
+        <div>
+            <strong class="text-white block">系統載入異常 (System Error)</strong>
+            <span id="jsCrashDetail" class="font-mono">偵測中...</span>
+        </div>
+    </div>
+    <button onclick="document.getElementById('jsCrashBanner').classList.add('hidden')" class="text-red-400 hover:text-white self-end sm:self-center"><i class="bi bi-x-lg"></i></button>
+</div>
+
+<div id="loginOverlay" class="fixed inset-0 z-[100] bg-darkbg-deep flex flex-col items-center justify-center p-4 transition-opacity duration-500">
+    <div class="premium-card max-w-sm w-full p-8 rounded-2xl text-center space-y-6 shadow-2xl shadow-gold-900/20">
+        <div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-gold-400 to-gold-800 flex items-center justify-center shadow-lg shadow-gold-950/50 mb-2">
+            <i class="bi bi-safe2 text-darkbg-deep text-3xl font-bold"></i>
+        </div>
+        <div>
+            <h1 class="font-cinzel text-2xl font-bold tracking-wider gold-gradient-text">黃金財庫</h1>
+        </div>
+
+        <!-- 偵測初始化載入狀態 -->
+        <div id="loginLoading" class="text-stone-500 text-xs py-4 flex flex-col items-center gap-2">
+            <i class="bi bi-arrow-repeat animate-spin text-lg text-gold-400"></i>
+            <span>安全模組載入中...</span>
+        </div>
+
+        <form id="loginForm" onsubmit="handlePasscodeSubmit(event)" class="hidden space-y-4 text-left">
+            <div>
+                <label id="loginPasscodeLabel" class="block text-xs text-stone-400 font-medium mb-1.5">輸入密碼</label>
+                <input type="password" id="loginPasscode" required class="w-full text-center tracking-widest font-bold bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-lg text-gold-400 focus:outline-none focus:border-gold-500 transition-all" placeholder="">
+            </div>
+            <button type="submit" id="loginBtn" class="w-full bg-gradient-to-r from-gold-400 to-gold-600 hover:from-gold-500 hover:to-gold-700 text-darkbg-deep font-bold py-3 rounded-xl transition-all shadow-lg shadow-gold-950/20">
+                進入金庫 <i class="bi bi-box-arrow-in-right ml-1"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- STREAMING_CHUNK: Setting up the Header and Navigation panels -->
+<div id="appMainContainer" class="hidden opacity-0 transition-opacity duration-500">
+    <header class="border-b border-darkbg-border bg-darkbg-deep/80 backdrop-blur-md sticky top-0 z-40 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs">
+            <!-- Left Side: Brand Logo & Desktop Navigation Buttons -->
+            <div class="flex items-center justify-between md:justify-start gap-6 w-full md:w-auto">
+                <div onclick="switchTab('dashboard')" class="flex items-center gap-2 cursor-pointer group" title="返回總覽主畫面">
+                    <i class="bi bi-safe2 text-gold-400 text-lg group-hover:scale-110 transition-transform"></i>
+                    <span class="font-cinzel font-bold text-sm tracking-wider gold-gradient-text">黃金財庫</span>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex gap-1.5 bg-stone-950/60 p-1 rounded-xl border border-stone-800/40">
+                    <button id="nav-dashboard" onclick="switchTab('dashboard')" class="nav-btn active px-3.5 py-1.5 rounded-lg bg-gold-950/40 text-gold-300 border border-gold-800/40 font-medium transition-all">
+                        總覽
+                    </button>
+                    <button id="nav-portfolio" onclick="switchTab('portfolio')" class="nav-btn px-3.5 py-1.5 rounded-lg text-stone-400 hover:text-gold-300 transition-all">
+                        庫存
+                    </button>
+                    <button id="nav-ledger" onclick="switchTab('ledger')" class="nav-btn px-3.5 py-1.5 rounded-lg text-stone-400 hover:text-gold-300 transition-all">
+                        流水帳
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Side: Status, Share Actions, and Database Sync Info -->
+            <div class="flex flex-wrap items-center gap-2 justify-between md:justify-end w-full md:w-auto">
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <!-- 變更密碼按鈕 (極簡鑰匙圖示，隱蔽無提示變更) -->
+                    <button onclick="openChangePasscodeModal()" class="bg-stone-900 hover:bg-stone-800 border border-stone-800 px-3 py-1.5 rounded-lg text-gold-400 transition-all flex items-center gap-1.5">
+                        <i class="bi bi-key-fill"></i> 變更密碼
+                    </button>
+                    <!-- 複製直達連結按鈕 -->
+                    <button onclick="copyDirectLink()" class="bg-stone-900 hover:bg-stone-800 border border-stone-800 px-3 py-1.5 rounded-lg text-stone-300 transition-all flex items-center gap-1.5">
+                        <i class="bi bi-link-45deg"></i> 📋 複製直達連結
+                    </button>
+                    <button onclick="handleLogout()" class="bg-red-950/20 hover:bg-red-950/50 border border-red-900/30 text-red-400 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1">
+                        <i class="bi bi-box-arrow-right"></i> 退出金庫
+                    </button>
+                </div>
+
+                <div class="bg-stone-900/50 border border-stone-800 px-3 py-1.5 rounded-lg flex items-center gap-2 self-start sm:self-center">
+                    <span id="dbSyncIndicatorColor" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span id="dbSyncIndicator" class="text-stone-400">連線中...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Navigation -->
+        <div class="flex md:hidden gap-2 w-full justify-center mt-3">
+            <button id="nav-dashboard-mobile" onclick="switchTab('dashboard')" class="nav-btn active flex-1 px-2 py-1.5 rounded-lg bg-gold-950/40 text-gold-300 border border-gold-800/40 font-medium transition-all text-xs">
+                總覽
+            </button>
+            <button id="nav-portfolio-mobile" onclick="switchTab('portfolio')" class="nav-btn flex-1 px-2 py-1.5 rounded-lg text-stone-400 hover:text-gold-300 transition-all text-xs">
+                庫存
+            </button>
+            <button id="nav-ledger-mobile" onclick="switchTab('ledger')" class="nav-btn flex-1 px-2 py-1.5 rounded-lg text-stone-400 hover:text-gold-300 transition-all text-xs">
+                流水帳
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 mt-6">
+
+        <div id="alertBox" class="hidden mb-6 p-4 rounded-xl border flex justify-between items-center transition-all duration-300">
+            <div class="flex items-center gap-3">
+                <i id="alertIcon" class="bi text-xl"></i>
+                <span id="alertMessage" class="text-sm font-medium"></span>
+            </div>
+            <button onclick="closeAlert()" class="text-stone-400 hover:text-white"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <!-- ==================== TAB: DASHBOARD ==================== -->
+        <!-- STREAMING_CHUNK: Rendering Dashboard Panels and Stat Cards -->
+        <section id="tab-dashboard" class="space-y-6">
+            <!-- Asset Overview Summary Cards (Upgraded with direct click-through action) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <!-- Card: Total Assets -->
+                <div onclick="switchTab('portfolio')" class="premium-card p-6 rounded-2xl relative overflow-hidden group cursor-pointer hover:border-gold-500/50 transition-all active:scale-[0.99]" title="點擊切換至庫存頁面，查看目前持有明細">
+                    <div class="absolute -right-6 -bottom-6 text-gold-900/10 text-9xl font-bold font-cinzel select-none group-hover:scale-110 transition-transform">
+                        $
+                    </div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs uppercase tracking-wider text-stone-400 font-semibold mb-1 flex items-center gap-1">
+                                雙軌整合總市值 (TWD) <i class="bi bi-search text-[10px] text-stone-500 group-hover:text-gold-400 transition-colors"></i>
+                            </p>
+                            <h2 class="text-3xl font-bold text-white tracking-tight font-cinzel" id="totalAssetVal">--</h2>
+                            <p class="text-[9px] text-stone-500 mt-1">🔍 點擊查看未實現持股明細</p>
+                        </div>
+                        <div class="p-2.5 bg-gold-950/50 rounded-xl border border-gold-500/20 text-gold-400">
+                            <i class="bi bi-safe2 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex flex-col gap-2 border-t border-stone-800/60 pt-3 text-[11px]">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-1.5">
+                                <span id="totalProfitPill" class="px-2 py-0.5 rounded font-medium flex items-center gap-1 text-[10px]">
+                                    <i id="totalProfitIcon" class="bi"></i>
+                                    <span id="totalProfitPct">--</span>
+                                </span>
+                                <span class="text-stone-500">庫存未實現損益</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-1.5" onclick="event.stopPropagation(); navigateToLedgerWithFilter('', '賣出');" title="點擊穿透查看歷史賣出平倉紀錄">
+                                <span id="totalRealizedPill" class="px-2 py-0.5 rounded font-medium flex items-center gap-1 text-[10px] hover:brightness-110 transition-all">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <span id="totalRealizedPct">--</span>
+                                </span>
+                                <span class="text-stone-500 hover:text-gold-300 transition-colors flex items-center gap-1">
+                                    歷史已實現損益 (FIFO) <i class="bi bi-arrow-right-short"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card: W Account -->
+                <div onclick="navigateToLedgerWithFilter('W', '')" class="premium-card p-6 rounded-2xl relative overflow-hidden group border-l-4 border-l-amber-500 cursor-pointer hover:border-amber-500/40 transition-all active:scale-[0.99]" title="點擊直接篩選 W 帳戶的歷史交易明細">
+                    <div class="absolute -right-6 -bottom-6 text-amber-900/10 text-9xl font-bold font-cinzel select-none">
+                        W
+                    </div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs uppercase tracking-wider text-stone-400 font-semibold mb-1 flex items-center gap-1">
+                                W 專屬帳戶市值 <i class="bi bi-search text-[10px] text-stone-500 group-hover:text-amber-400 transition-colors"></i>
+                            </p>
+                            <h2 class="text-2xl font-bold text-white font-cinzel" id="wAccountVal">--</h2>
+                            <p class="text-[9px] text-stone-500 mt-1">🔍 點擊看 W 帳戶買賣收益流水帳</p>
+                        </div>
+                        <span class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded-md font-bold">W Track</span>
+                    </div>
+                    <div class="mt-4 grid grid-cols-2 gap-2 text-xs text-stone-400">
+                        <div>交易筆數: <span class="text-white font-bold" id="wCount">--</span> 筆</div>
+                        <div>持股佔比: <span class="text-white font-bold" id="wWeight">--</span></div>
+                    </div>
+                </div>
+
+                <!-- Card: Q Account -->
+                <div onclick="navigateToLedgerWithFilter('Q', '')" class="premium-card p-6 rounded-2xl relative overflow-hidden group border-l-4 border-l-yellow-500 cursor-pointer hover:border-yellow-500/40 transition-all active:scale-[0.99]" title="點擊直接篩選 Q 帳戶的歷史交易明細">
+                    <div class="absolute -right-6 -bottom-6 text-yellow-900/10 text-9xl font-bold font-cinzel select-none">
+                        Q
+                    </div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs uppercase tracking-wider text-stone-400 font-semibold mb-1 flex items-center gap-1">
+                                Q 資產帳戶市值 <i class="bi bi-search text-[10px] text-stone-500 group-hover:text-yellow-400 transition-colors"></i>
+                            </p>
+                            <h2 class="text-2xl font-bold text-white font-cinzel" id="qAccountVal">--</h2>
+                            <p class="text-[9px] text-stone-500 mt-1">🔍 點擊看 Q 帳戶買賣收益流水帳</p>
+                        </div>
+                        <span class="text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-1 rounded-md font-bold">Q Track</span>
+                    </div>
+                    <div class="mt-4 grid grid-cols-2 gap-2 text-xs text-stone-400">
+                        <div>交易筆數: <span class="text-white font-bold" id="qCount">--</span> 筆</div>
+                        <div>持股佔比: <span class="text-white font-bold" id="qWeight">--</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STREAMING_CHUNK: Styling and laying out Dashboard Charts & Controls -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left 2 Cols: Asset Allocation & List -->
+                <div class="lg:col-span-2 premium-card p-6 rounded-2xl flex flex-col">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                        <div>
+                            <h3 class="text-lg font-bold text-white"><i class="bi bi-pie-chart-fill text-gold-400 mr-2"></i>核心資產持股比重分析</h3>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="toggleAssetChartMode('value')" id="chartBtnValue" class="px-2.5 py-1 text-xs rounded bg-gold-500 text-darkbg-deep font-semibold">依市值</button>
+                            <button onclick="toggleAssetChartMode('shares')" id="chartBtnShares" class="px-2.5 py-1 text-xs rounded bg-stone-800 text-stone-400 font-semibold hover:bg-stone-700">依股數</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 flex-1" id="allocationBarChartContainer">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <!-- Right 1 Col: Quick Control Panel -->
+                <div class="lg:col-span-1 flex flex-col gap-6">
+                    <div class="premium-card p-6 rounded-2xl space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                <i class="bi bi-lightning-charge-fill text-gold-400"></i>主畫面快速新增
+                            </h3>
+                            <span class="text-[10px] bg-gold-950/40 text-gold-400 px-2.5 py-0.5 rounded font-bold uppercase tracking-wider">⚡ 閃電輸入</span>
+                        </div>
+                        <form onsubmit="saveQuickRecord(event)" class="space-y-3.5 text-xs">
+                            <div>
+                                <label class="block text-stone-400 font-medium mb-1">股票名稱 / 代號</label>
+                                <input type="text" id="quickStock" required class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-gold-500 transition-all" placeholder="">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-stone-400 font-medium mb-1">分配帳戶</label>
+                                    <select id="quickAccount" class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-gold-500 transition-all">
+                                        <option value="W">W 帳戶</option>
+                                        <option value="Q">Q 帳戶</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-stone-400 font-medium mb-1">交易狀態</label>
+                                    <select id="quickStatus" class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-gold-500 transition-all">
+                                        <option value="買進">買進</option>
+                                        <option value="賣出">賣出</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-stone-400 font-medium mb-1">成交單價 (TWD)</label>
+                                    <input type="number" step="0.01" id="quickPrice" required class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-gold-500 transition-all" placeholder="">
+                                </div>
+                                <div>
+                                    <label class="block text-stone-400 font-medium mb-1">交易股數</label>
+                                    <input type="number" id="quickShares" required class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-gold-500 transition-all" placeholder="">
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-gradient-to-r from-gold-400 to-gold-600 hover:from-gold-500 hover:to-gold-700 text-darkbg-deep font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-1 shadow-lg shadow-gold-950/20 active:scale-95">
+                                <i class="bi bi-cloud-arrow-up-fill"></i> 推送至共編雲端
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- STREAMING_CHUNK: Setting up the Database Data Management layout -->
+                    <div class="premium-card p-6 rounded-2xl flex flex-col justify-between space-y-4">
+                        <div>
+                            <h3 class="text-base font-bold text-white mb-2"><i class="bi bi-sliders text-gold-400 mr-2"></i>資料管理</h3>
+                            
+                            <!-- Robust Drag & Drop Zone -->
+                            <div class="border-2 border-dashed border-stone-800 hover:border-gold-500/50 rounded-xl p-4 text-center cursor-pointer bg-stone-900/30 transition-all relative" id="dropZone">
+                                <input type="file" id="csvFileInput" accept=".csv, .xlsx, .xls" class="hidden">
+                                <div class="pointer-events-none">
+                                    <i class="bi bi-file-earmark-excel-fill text-3xl text-emerald-400 mb-1 block" id="excelIconUI"></i>
+                                    <span class="text-[11px] font-semibold text-white block">拖曳對帳單 Excel 或 CSV 至此覆蓋</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-stone-800">
+                            <div class="flex justify-between items-center text-xs mb-3">
+                                <span class="text-stone-400 font-medium">資料庫狀態:</span>
+                                <span class="text-emerald-400 font-semibold" id="dbSourceStatus">連線中...</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="exportToCSV()" class="w-full bg-stone-900 hover:bg-stone-800 text-white border border-stone-800 text-xs py-2 rounded-lg font-medium transition-all">
+                                    <i class="bi bi-download mr-1"></i>備份明細
+                                </button>
+                                <button onclick="resetToDefaultData()" class="w-full bg-red-950/40 text-red-300 border border-red-900/30 hover:bg-red-900/30 text-xs py-2 rounded-lg font-medium transition-all">
+                                    <i class="bi bi-trash mr-1"></i>重設數據
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STREAMING_CHUNK: Recent Transactions Table -->
+            <div class="premium-card p-6 rounded-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-white"><i class="bi bi-clock-history text-gold-400 mr-2"></i>最新成交紀錄與每筆損益 (即時同步)</h3>
+                    <button onclick="switchTab('ledger')" class="text-xs text-gold-400 hover:text-gold-300">查看全部 <i class="bi bi-arrow-right ml-1"></i></button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs min-w-[650px]">
+                        <thead>
+                            <tr class="border-b border-stone-800 text-stone-400 pb-2">
+                                <th class="py-2.5">時間</th>
+                                <th>股票</th>
+                                <th>帳戶</th>
+                                <th>狀態</th>
+                                <th>單價</th>
+                                <th>股數</th>
+                                <th>該筆損益 (FIFO)</th>
+                                <th>創建者</th>
+                                <th class="text-right">小計</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentTransactionsTable" class="divide-y divide-stone-900">
+                            <!-- Filled dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB: PORTFOLIO ==================== -->
+        <!-- STREAMING_CHUNK: Laying out the Portfolio Tab UI elements -->
+        <section id="tab-portfolio" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white"><i class="bi bi-briefcase text-gold-400 mr-2"></i>個別持股與交易明細回報</h2>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 bg-stone-900/80 border border-stone-800 p-2 rounded-xl">
+                    <span class="text-[10px] text-stone-400 font-medium uppercase">現價模擬:</span>
+                    <select id="stockSelectorForSimulation" onchange="loadSelectedStockForSimulation()" class="bg-stone-950 border border-stone-800 text-xs text-white rounded px-2.5 py-1 focus:outline-none focus:border-gold-500">
+                        <!-- Options filled dynamically -->
+                    </select>
+                    <input type="number" id="simulatedPriceInput" class="w-20 bg-stone-950 border border-stone-800 text-xs text-white rounded px-2.5 py-1 focus:outline-none focus:border-gold-500" placeholder="">
+                    <button onclick="updateSimulatedPrice()" class="bg-gold-500 hover:bg-gold-600 text-darkbg-deep text-xs font-bold px-2.5 py-1 rounded transition-all"><i class="bi bi-broadcast"></i> 推送</button>
+                    <!-- 🔄 證交所自動連動按鈕 -->
+                    <button id="syncTwseBtn" onclick="syncTwseClosingPrices()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-2.5 py-1 rounded transition-all flex items-center gap-1">
+                        <i class="bi bi-cloud-download-fill"></i> 連動台股收盤價
+                    </button>
+                </div>
+            </div>
+
+            <!-- Portfolio Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="portfolioCardsGrid">
+                <!-- Portfolio cards injected here dynamically -->
+            </div>
+        </section>
+
+        <!-- ==================== TAB: LEDGER ==================== -->
+        <!-- STREAMING_CHUNK: Designing Ledger controls and transactional history tables -->
+        <section id="tab-ledger" class="hidden space-y-6">
+            <div class="premium-card p-5 rounded-2xl space-y-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white"><i class="bi bi-receipt-cutoff text-gold-400 mr-2"></i>交易流水帳與先進先出 (FIFO) 損益報表</h2>
+                    </div>
+                    <button onclick="openAddRecordModal()" class="bg-gold-500 hover:bg-gold-600 text-darkbg-deep text-xs font-bold px-4 py-2 rounded-xl shadow-lg shadow-gold-950/50 flex items-center gap-1.5 transition-all">
+                        <i class="bi bi-plus-circle"></i> 新增交易紀錄
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-2">
+                    <div class="relative">
+                        <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 text-xs"></i>
+                        <input type="text" id="ledgerSearchInput" oninput="applyLedgerFilters()" placeholder="搜尋股票代號或名稱..." class="w-full bg-stone-950 border border-stone-800 text-xs text-white rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-gold-500">
+                    </div>
+                    <div>
+                        <select id="ledgerFilterAccount" onchange="applyLedgerFilters()" class="w-full bg-stone-950 border border-stone-800 text-xs text-white rounded-xl px-3 py-2.5 focus:outline-none focus:border-gold-500">
+                            <option value="">所有帳戶 (W & Q)</option>
+                            <option value="W">W 帳戶</option>
+                            <option value="Q">Q 帳戶</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="ledgerFilterStatus" onchange="applyLedgerFilters()" class="w-full bg-stone-950 border border-stone-800 text-xs text-white rounded-xl px-3 py-2.5 focus:outline-none focus:border-gold-500">
+                            <option value="">所有狀態</option>
+                            <option value="買進">買進</option>
+                            <option value="賣出">賣出</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center justify-end text-xs text-stone-400 px-1">
+                        共 <span class="text-gold-400 font-bold mx-1" id="filteredCount">0</span> 筆 / 總計金額: <span class="text-white font-bold ml-1" id="filteredSum">$0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ledger Table -->
+            <div class="premium-card rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-stone-900/50 border-b border-stone-800 text-stone-400">
+                                <th class="p-4">交易時間</th>
+                                <th class="p-4">股票名稱</th>
+                                <th class="p-4">帳戶</th>
+                                <th class="p-4">狀態</th>
+                                <th class="p-4">單價</th>
+                                <th class="p-4">股數</th>
+                                <th class="p-4">小計金額</th>
+                                <th class="p-4">該筆交易損益 (FIFO)</th>
+                                <th class="p-4">創建者</th>
+                                <th class="p-4 text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledgerTableBody" class="divide-y divide-stone-900/60">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- ==================== MODALS ==================== -->
+<!-- STREAMING_CHUNK: Modal components for Record adding and editing -->
+
+<!-- Modal: Add/Edit Record -->
+<div id="addRecordModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="premium-card max-w-md w-full rounded-2xl overflow-hidden shadow-2xl">
+        <div class="p-5 border-b border-stone-800 flex justify-between items-center bg-stone-900/20">
+            <h3 id="modalTitle" class="font-bold text-white flex items-center gap-2">
+                <i class="bi bi-file-earmark-plus text-gold-400"></i>新增交易項目
+            </h3>
+            <button onclick="closeAddRecordModal()" class="text-stone-400 hover:text-white"><i class="bi bi-x-lg"></i></button>
+        </div>
+        
+        <form id="addRecordForm" onsubmit="saveNewRecord(event)" class="p-5 space-y-4 text-xs">
+            <div>
+                <label class="block text-stone-400 font-medium mb-1">股票名稱 / 代號</label>
+                <input type="text" id="formStock" required class="w-full bg-stone-950 border border-stone-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-gold-500" placeholder="">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-stone-400 font-medium mb-1">交易狀態</label>
+                    <select id="formStatus" class="w-full bg-stone-950 border border-stone-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-gold-500">
+                        <option value="買進">買進</option>
+                        <option value="賣出">賣出</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-stone-400 font-medium mb-1">分配帳戶</label>
+                    <select id="formAccount" class="w-full bg-stone-950 border border-stone-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-gold-500">
+                        <option value="W">W 帳戶</option>
+                        <option value="Q">Q 帳戶</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-stone-400 font-medium mb-1">成交價格 (TWD)</label>
+                    <input type="number" step="0.01" id="formPrice" required class="w-full bg-stone-950 border border-stone-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-gold-500" placeholder="">
+                </div>
+                <div>
+                    <label class="block text-stone-400 font-medium mb-1">成交股數</label>
+                    <input type="number" id="formShares" required class="w-full bg-stone-950 border border-stone-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-gold-500" placeholder="">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-stone-400 font-medium mb-1">交易時間</label>
+                <input type="text" id="formTimestamp" placeholder="YYYY-MM-DD HH:MM:SS" class="w-full bg-stone-950 border border-stone-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-gold-500">
+            </div>
+
+            <div class="pt-3 border-t border-stone-800 flex gap-2">
+                <button type="button" onclick="closeAddRecordModal()" class="w-1/2 bg-stone-900 hover:bg-stone-800 text-stone-300 py-2.5 rounded-lg font-medium">
+                    取消
+                </button>
+                <button type="submit" id="modalSubmitBtn" class="w-1/2 bg-gold-500 hover:bg-gold-600 text-darkbg-deep py-2.5 rounded-lg font-bold">
+                    發布至共同雲端
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Simulated Price -->
+<div id="editPriceModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="premium-card max-w-sm w-full rounded-2xl overflow-hidden shadow-2xl">
+        <div class="p-5 border-b border-stone-800 flex justify-between items-center bg-stone-900/20">
+            <h3 class="font-bold text-white flex items-center gap-2"><i class="bi bi-pencil-square text-gold-400"></i>修改模擬現價</h3>
+            <button onclick="closeEditPriceModal()" class="text-stone-400 hover:text-white"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="p-5 space-y-4 text-xs">
+            <div>
+                <label class="block text-stone-400 font-medium mb-1">股票名稱</label>
+                <input type="text" id="priceEditStockName" disabled class="w-full bg-stone-900 border border-stone-800 rounded-lg px-3 py-2 text-stone-400 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-stone-400 font-medium mb-1">模擬現價 (TWD)</label>
+                <input type="number" step="0.01" id="priceEditStockVal" required class="w-full bg-stone-950 border border-stone-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-gold-500" placeholder="">
+            </div>
+            <div class="pt-3 border-t border-stone-800 flex gap-2">
+                <button type="button" onclick="closeEditPriceModal()" class="w-1/2 bg-stone-900 hover:bg-stone-800 text-stone-300 py-2.5 rounded-lg font-medium">
+                    取消
+                </button>
+                <button type="button" onclick="saveSimulatedPriceFromModal()" class="w-1/2 bg-gold-500 hover:bg-gold-600 text-darkbg-deep py-2.5 rounded-lg font-bold">
+                    廣播同步更新
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Change Passcode (Private / Silent Migration) -->
+<div id="changePasscodeModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="premium-card max-w-sm w-full rounded-2xl overflow-hidden shadow-2xl">
+        <div class="p-5 border-b border-stone-800 flex justify-between items-center bg-stone-900/20">
+            <h3 class="font-bold text-white flex items-center gap-2"><i class="bi bi-key-fill text-gold-400"></i>變更密碼</h3>
+            <button onclick="closeChangePasscodeModal()" class="text-stone-400 hover:text-white"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <form id="changePasscodeForm" onsubmit="handleChangePasscodeSubmit(event)" class="p-5 space-y-4 text-xs">
+            <div>
+                <label class="block text-stone-400 font-medium mb-1.5">輸入新密碼</label>
+                <input type="password" id="newPasscodeVal" required class="w-full text-center tracking-widest font-bold bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-lg text-gold-400 focus:outline-none focus:border-gold-500 transition-all" placeholder="">
+            </div>
+            <div class="pt-3 border-t border-stone-800 flex gap-2">
+                <button type="button" onclick="closeChangePasscodeModal()" class="w-1/2 bg-stone-900 hover:bg-stone-800 text-stone-300 py-2.5 rounded-lg font-medium">
+                    取消
+                </button>
+                <button type="submit" class="w-1/2 bg-gold-500 hover:bg-gold-600 text-darkbg-deep py-2.5 rounded-lg font-bold">
+                    確認變更
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Luxury Custom Confirmation Dialog -->
+<div id="confirmModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="premium-card max-w-sm w-full rounded-2xl overflow-hidden shadow-2xl">
+        <div class="p-5 border-b border-stone-800 bg-stone-900/20">
+            <h3 id="confirmTitle" class="font-bold text-white flex items-center gap-2 text-sm">
+                <i class="bi bi-question-circle text-gold-400"></i>確認操作
+            </h3>
+        </div>
+        <div class="p-5 space-y-4 text-xs">
+            <p id="confirmMessage" class="text-stone-300 leading-relaxed"></p>
+            <div class="pt-3 border-t border-stone-800 flex gap-2">
+                <button type="button" id="confirmCancelBtn" class="w-1/2 bg-stone-900 hover:bg-stone-800 text-stone-300 py-2 rounded-lg font-medium">
+                    取消
+                </button>
+                <button type="button" id="confirmOkBtn" class="w-1/2 bg-gold-500 hover:bg-gold-600 text-darkbg-deep py-2 rounded-lg font-bold">
+                    確認
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 異常全局兜底監控
+    window.addEventListener('error', function(e) {
+        const banner = document.getElementById('jsCrashBanner');
+        const detail = document.getElementById('jsCrashDetail');
+        if (banner && detail) {
+            banner.classList.remove('hidden');
+            detail.innerText = e.message + " (" + (e.filename ? e.filename.substring(e.filename.lastIndexOf('/') + 1) : '連線異常') + " 於 " + e.lineno + " 行)";
+        }
+    });
+</script>
+
+<!-- STREAMING_CHUNK: Setup Firebase and Master Lock cryptographic helper logic -->
+<script type="module">
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getDatabase, ref, onValue, set, push, remove, get, child } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+    // Web Config
+    const firebaseConfig = {
+        apiKey: "AIzaSyBS27awVJOs4IELa3MsdZKOJuMUDKK5Pwu4",
+        authDomain: "golden-93f0c.firebaseapp.com",
+        databaseURL: "https://golden-93f0c-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "golden-93f0c",
+        storageBucket: "golden-93f0c.firebasestorage.app",
+        messagingSenderId: "906309591641",
+        appId: "1:906309591641:web:2d4088b9d3f5a5d6554748",
+        measurementId: "G-3CKX10LNHL"
+    };
+
+    let app, db;
+    try {
+        app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        db = getDatabase(app);
+    } catch (initErr) {
+        console.error("Firebase 初始化失敗:", initErr);
+        throw new Error("伺服器連線異常，請確認網路連線：" + initErr.message);
+    }
+
+    // 全域變數
+    let currentPin = 'shared_vault'; // 改為單一共享雲端空間，透過主密碼上鎖
+    let transactions = [];
+    let simulatedMarketPrices = {};
+    let currentTab = 'dashboard';
+    let chartMode = 'value';
+    let editingRecordId = null;
+
+    let unsubscribeLedger = null;
+    let unsubscribePrices = null;
+
+    // 輕量級雜湊函數 (相容於所有 iframe 容器)
+    function generatePasscodeHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = (hash << 5) - hash + char;
+            hash = hash & hash;
+        }
+        return "v1_" + Math.abs(hash).toString(36);
+    }
+
+    let isMasterPasscodeInitialized = false;
+    let masterPasscodeHash = null;
+
+    // 用於記錄每一筆買進賣出的 FIFO 損益對照表
+    let calculatedTxPnlMap = {};
+
+    // 儲存與複製直達連結
+    function copyDirectLink() {
+        const storedKey = localStorage.getItem('vault_master_key_raw');
+        if (!storedKey) return;
+        const directUrl = `${window.location.origin}${window.location.pathname}?pin=${encodeURIComponent(storedKey)}`;
+        navigator.clipboard.writeText(directUrl).then(() => {
+            showAlert("success", "直達免密連結複製成功");
+        }).catch(err => {
+            showAlert("error", "複製失敗，請手動複製網址：" + directUrl);
+        });
+    }
+
+    // STREAMING_CHUNK: Fetching Master Security Lock and rendering initialization screen if empty -->
+    function initVaultAccess() {
+        const dbRef = ref(db);
+        get(child(dbRef, 'vaults/master_security/lock')).then((snapshot) => {
+            const val = snapshot.val();
+            document.getElementById('loginLoading').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+
+            if (!val) {
+                // 首次使用，需初始化註冊密碼
+                isMasterPasscodeInitialized = false;
+                document.getElementById('loginPasscodeLabel').innerText = "初次啟用金庫：請設定管理密碼";
+                document.getElementById('loginBtn').innerText = "設定並開啟金庫";
+            } else {
+                // 密碼已初始化
+                isMasterPasscodeInitialized = true;
+                masterPasscodeHash = val;
+                document.getElementById('loginPasscodeLabel').innerText = "輸入解鎖密碼";
+                document.getElementById('loginBtn').innerText = "解鎖進入金庫";
+            }
+
+            // 檢查 URL 內是否附帶免密直達
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlKey = urlParams.get('pin');
+            if (urlKey) {
+                document.getElementById('loginPasscode').value = urlKey;
+                attemptUnlock(urlKey);
+            } else {
+                const localStored = localStorage.getItem('vault_master_key_raw');
+                if (localStored) {
+                    document.getElementById('loginPasscode').value = localStored;
+                    attemptUnlock(localStored);
+                }
+            }
+        }).catch((err) => {
+            console.error(err);
+        });
+    }
+
+    function handlePasscodeSubmit(e) {
+        e.preventDefault();
+        const inputVal = document.getElementById('loginPasscode').value.trim();
+        if (!inputVal) return;
+        attemptUnlock(inputVal);
+    }
+
+    // STREAMING_CHUNK: Verifying passcode match or saving new passcode hash silently
+    async function attemptUnlock(passcode) {
+        const inputHash = generatePasscodeHash(passcode);
+
+        if (!isMasterPasscodeInitialized) {
+            // 進行密碼初始化註冊
+            try {
+                await set(ref(db, 'vaults/master_security/lock'), inputHash);
+                masterPasscodeHash = inputHash;
+                isMasterPasscodeInitialized = true;
+                completeAccessFlow(passcode);
+            } catch (err) {
+                showAlert("error", "密碼設定失敗");
+            }
+        } else {
+            // 驗證現有密碼
+            if (inputHash === masterPasscodeHash) {
+                completeAccessFlow(passcode);
+            } else {
+                showAlert("error", "密碼錯誤");
+            }
+        }
+    }
+
+    function completeAccessFlow(rawPasscode) {
+        localStorage.setItem('vault_master_key_raw', rawPasscode);
+        
+        try {
+            const newUrl = `${window.location.origin}${window.location.pathname}?pin=${encodeURIComponent(rawPasscode)}`;
+            window.history.replaceState({ path: newUrl }, '', newUrl);
+        } catch (historyErr) {
+            console.warn(historyErr);
+        }
+
+        const loginOverlay = document.getElementById('loginOverlay');
+        const appMainContainer = document.getElementById('appMainContainer');
+        
+        loginOverlay.classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(() => {
+            loginOverlay.classList.add('hidden');
+            appMainContainer.classList.remove('hidden');
+            setTimeout(() => appMainContainer.classList.remove('opacity-0'), 50);
+        }, 300);
+
+        setupDragAndDrop();
+        subscribeToDatabase();
+    }
+
+    function handleLogout() {
+        localStorage.removeItem('vault_master_key_raw');
+        try {
+            const cleanUrl = `${window.location.origin}${window.location.pathname}`;
+            window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+        } catch (historyErr) {
+            console.warn(historyErr);
+        }
+
+        if (unsubscribeLedger) { unsubscribeLedger(); unsubscribeLedger = null; }
+        if (unsubscribePrices) { unsubscribePrices(); unsubscribePrices = null; }
+
+        transactions = [];
+        simulatedMarketPrices = {};
+        calculatedTxPnlMap = {};
+
+        document.getElementById('loginPasscode').value = '';
+        
+        const loginOverlay = document.getElementById('loginOverlay');
+        const appMainContainer = document.getElementById('appMainContainer');
+
+        appMainContainer.classList.add('opacity-0');
+        setTimeout(() => {
+            appMainContainer.classList.add('hidden');
+            loginOverlay.classList.remove('hidden');
+            setTimeout(() => loginOverlay.classList.remove('opacity-0', 'pointer-events-none'), 50);
+            initVaultAccess();
+        }, 300);
+    }
+
+    // STREAMING_CHUNK: Changing password dynamically and updating master config in Firebase
+    async function handleChangePasscodeSubmit(e) {
+        e.preventDefault();
+        const newVal = document.getElementById('newPasscodeVal').value.trim();
+        if (!newVal) {
+            closeChangePasscodeModal();
+            return;
+        }
+
+        const newHash = generatePasscodeHash(newVal);
+
+        try {
+            await set(ref(db, 'vaults/master_security/lock'), newHash);
+            masterPasscodeHash = newHash;
+            localStorage.setItem('vault_master_key_raw', newVal);
+
+            try {
+                const newUrl = `${window.location.origin}${window.location.pathname}?pin=${encodeURIComponent(newVal)}`;
+                window.history.replaceState({ path: newUrl }, '', newUrl);
+            } catch (historyErr) {
+                console.warn(historyErr);
+            }
+
+            closeChangePasscodeModal();
+        } catch (err) {
+            console.error(err);
+            closeChangePasscodeModal();
+        }
+    }
+
+    function openChangePasscodeModal() {
+        document.getElementById('newPasscodeVal').value = '';
+        document.getElementById('changePasscodeModal').classList.remove('hidden');
+    }
+
+    function closeChangePasscodeModal() {
+        document.getElementById('changePasscodeModal').classList.add('hidden');
+    }
+
+    // STREAMING_CHUNK: Database listening and synchronization of live portfolio logs
+    function subscribeToDatabase() {
+        if (unsubscribeLedger) unsubscribeLedger();
+        if (unsubscribePrices) unsubscribePrices();
+
+        const dbLedgerRef = ref(db, `vaults/${currentPin}/ledger`);
+        const dbPricesRef = ref(db, `vaults/${currentPin}/prices`);
+
+        // 1. 監聽流水帳
+        unsubscribeLedger = onValue(dbLedgerRef, (snapshot) => {
+            const data = snapshot.val();
+            const fetched = [];
+            if (data) {
+                for (let key in data) {
+                    if (data[key] && data[key].stock) {
+                        fetched.push({ id: key, ...data[key] });
+                    }
+                }
+            }
+
+            transactions = fetched;
+            updateUI();
+            document.getElementById('dbSourceStatus').innerText = `同步中`;
+            document.getElementById('dbSyncIndicator').innerText = "雲端同步中";
+            document.getElementById('dbSyncIndicatorColor').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+        }, (error) => {
+            console.error(error);
+            document.getElementById('dbSourceStatus').innerText = "連線失敗";
+            document.getElementById('dbSyncIndicator').innerText = "已斷線";
+            document.getElementById('dbSyncIndicatorColor').className = "w-2 h-2 rounded-full bg-red-500 animate-pulse";
+        });
+
+        // 2. 監聽模擬價格
+        unsubscribePrices = onValue(dbPricesRef, (snapshot) => {
+            const data = snapshot.val();
+            simulatedMarketPrices = data || {};
+            updateUI();
+        });
+    }
+
+    function updateUI() {
+        calculatePortfolioAndStats();
+        renderRecentTransactions();
+        renderLedgerTable();
+        renderSimulationSelector();
+    }
+
+    function formatCurrency(val) {
+        return new Intl.NumberFormat('zh-TW', { style: 'currency', currency: 'TWD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val);
+    }
+
+    // STREAMING_CHUNK: Running multi-account FIFO stock assignment calculations
+    function calculatePortfolioAndStats() {
+        let totalAssetValue = 0;
+        let wTotalValue = 0;
+        let qTotalValue = 0;
+        let wCount = 0;
+        let qCount = 0;
+
+        const sortedTransactions = [...transactions].sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+        // 1. 建立 FIFO 買進池與每筆交易損益映射表
+        let openBuys = {}; 
+        let txPnlMap = {}; 
+
+        sortedTransactions.forEach(t => {
+            const key = `${t.stock}-${t.account}`;
+            const price = Number(t.price);
+            const shares = Number(t.shares);
+
+            if (!openBuys[key]) {
+                openBuys[key] = [];
+            }
+
+            if (t.account === 'W') {
+                wCount++;
+            } else if (t.account === 'Q') {
+                qCount++;
+            }
+
+            if (t.status === '買進') {
+                const lot = {
+                    id: t.id,
+                    price: price,
+                    originalShares: shares,
+                    remaining: shares,
+                    timestamp: t.timestamp
+                };
+                openBuys[key].push(lot);
+                
+                txPnlMap[t.id] = {
+                    type: 'buy',
+                    price: price,
+                    originalShares: shares,
+                    remaining: shares,
+                    pnl: 0,
+                    isFullySold: false
+                };
+            } else if (t.status === '賣出') {
+                let sellRemaining = shares;
+                let realized = 0;
+
+                for (let i = 0; i < openBuys[key].length; i++) {
+                    let buyLot = openBuys[key][i];
+                    if (buyLot.remaining > 0) {
+                        let matched = Math.min(sellRemaining, buyLot.remaining);
+                        buyLot.remaining -= matched;
+                        sellRemaining -= matched;
+
+                        realized += matched * (price - buyLot.price);
+
+                        if (txPnlMap[buyLot.id]) {
+                            txPnlMap[buyLot.id].remaining = buyLot.remaining;
+                            if (buyLot.remaining === 0) {
+                                txPnlMap[buyLot.id].isFullySold = true;
+                            }
+                        }
+
+                        if (sellRemaining <= 0) break;
+                    }
+                }
+
+                txPnlMap[t.id] = {
+                    type: 'sell',
+                    price: price,
+                    originalShares: shares,
+                    pnl: realized,
+                    unmatchedShares: sellRemaining 
+                };
+            }
+        });
+
+        calculatedTxPnlMap = txPnlMap;
+
+        // 2. 統整目前庫存資訊與「庫存未實現損益」
+        let portfolioList = [];
+        let stockTotals = {};
+        let totalUnrealizedPnl = 0;
+        let totalRealizedPnl = 0;
+        let totalActiveCost = 0;
+
+        for (let key in openBuys) {
+            const activeLots = openBuys[key].filter(lot => lot.remaining > 0);
+            if (activeLots.length === 0) continue;
+
+            const [stock, account] = key.split('-');
+            const simPrice = simulatedMarketPrices[stock] || activeLots[activeLots.length - 1].price;
+
+            let stockTotalShares = 0;
+            let stockTotalCost = 0;
+            let stockMarketValue = 0;
+            let stockPnl = 0;
+
+            const detailedLots = activeLots.map(lot => {
+                const lotCost = lot.remaining * lot.price;
+                const lotMarketVal = lot.remaining * simPrice;
+                const lotPnl = lotMarketVal - lotCost;
+
+                stockTotalShares += lot.remaining;
+                stockTotalCost += lotCost;
+                stockMarketValue += lotMarketVal;
+                stockPnl += lotPnl;
+                totalUnrealizedPnl += lotPnl;
+                totalActiveCost += lotCost;
+
+                return {
+                    id: lot.id,
+                    buyPrice: lot.price,
+                    remainingShares: lot.remaining,
+                    originalShares: lot.originalShares,
+                    timestamp: lot.timestamp,
+                    marketValue: lotMarketVal,
+                    pnl: lotPnl,
+                    pnlPct: lotCost > 0 ? (lotPnl / lotCost) * 100 : 0
+                };
+            });
+
+            const avgCost = stockTotalShares > 0 ? stockTotalCost / stockTotalShares : 0;
+
+            portfolioList.push({
+                stock,
+                account,
+                totalShares: stockTotalShares,
+                avgCost,
+                simPrice,
+                marketValue: stockMarketValue,
+                pnl: stockPnl,
+                pnlPct: stockTotalCost > 0 ? (stockPnl / stockTotalCost) * 100 : 0,
+                lots: detailedLots
+            });
+
+            totalAssetValue += stockMarketValue;
+
+            if (account === 'W') {
+                wTotalValue += stockMarketValue;
+            } else if (account === 'Q') {
+                qTotalValue += stockMarketValue;
+            }
+
+            if (!stockTotals[stock]) {
+                stockTotals[stock] = { value: 0, shares: 0 };
+            }
+            stockTotals[stock].value += stockMarketValue;
+            stockTotals[stock].shares += stockTotalShares;
+        }
+
+        // 3. 獲取已實現損益
+        for (let id in txPnlMap) {
+            if (txPnlMap[id].type === 'sell') {
+                totalRealizedPnl += txPnlMap[id].pnl;
+            }
+        }
+
+        // 4. 更新面板數據
+        document.getElementById('totalAssetVal').innerText = formatCurrency(totalAssetValue);
+        document.getElementById('wAccountVal').innerText = formatCurrency(wTotalValue);
+        document.getElementById('qAccountVal').innerText = formatCurrency(qTotalValue);
+        
+        document.getElementById('wCount').innerText = wCount;
+        document.getElementById('qCount').innerText = qCount;
+
+        const totalSegments = wTotalValue + qTotalValue;
+        const wWeightPct = totalSegments > 0 ? ((wTotalValue / totalSegments) * 100).toFixed(1) + '%' : '0%';
+        const qWeightPct = totalSegments > 0 ? ((qTotalValue / totalSegments) * 100).toFixed(1) + '%' : '0%';
+        document.getElementById('wWeight').innerText = wWeightPct;
+        document.getElementById('qWeight').innerText = qWeightPct;
+
+        // A. 持股未實現損益
+        const totalPnLPct = totalActiveCost > 0 ? (totalUnrealizedPnl / totalActiveCost) * 100 : 0;
+        const pnlPill = document.getElementById('totalProfitPill');
+        const pnlIcon = document.getElementById('totalProfitIcon');
+        const pnlTxt = document.getElementById('totalProfitPct');
+
+        pnlTxt.innerText = `${totalUnrealizedPnl >= 0 ? '+' : ''}${formatCurrency(totalUnrealizedPnl)} (${totalPnLPct.toFixed(2)}%)`;
+        if (totalUnrealizedPnl >= 0) {
+            pnlPill.className = "px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold flex items-center gap-1 text-[11px]";
+            pnlIcon.className = "bi bi-graph-up-arrow";
+        } else {
+            pnlPill.className = "px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 font-bold flex items-center gap-1 text-[11px]";
+            pnlIcon.className = "bi bi-graph-down-arrow";
+        }
+
+        // B. 歷史已實現損益
+        const realizedPill = document.getElementById('totalRealizedPill');
+        const realizedTxt = document.getElementById('totalRealizedPct');
+        realizedTxt.innerText = `${totalRealizedPnl >= 0 ? '+' : ''}${formatCurrency(totalRealizedPnl)}`;
+        if (totalRealizedPnl >= 0) {
+            realizedPill.className = "px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold flex items-center gap-1 text-[11px]";
+        } else {
+            realizedPill.className = "px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 font-bold flex items-center gap-1 text-[11px]";
+        }
+
+        renderAssetAllocationChart(stockTotals, totalAssetValue);
+        renderPortfolioGrid(portfolioList);
+    }
+
+    // STREAMING_CHUNK: Filtering transaction arrays and binding direct click-through navigation
+    function navigateToLedgerWithFilter(account, status) {
+        const accSelect = document.getElementById('ledgerFilterAccount');
+        const statSelect = document.getElementById('ledgerFilterStatus');
+        
+        if (accSelect) accSelect.value = account || '';
+        if (statSelect) statSelect.value = status || '';
+        
+        switchTab('ledger');
+    }
+
+    function renderAssetAllocationChart(stockTotals, totalAssetValue) {
+        const chartContainer = document.getElementById('allocationBarChartContainer');
+        chartContainer.innerHTML = '';
+
+        let sortedStocks = [];
+        let grandTotalMetric = 0;
+
+        for (let name in stockTotals) {
+            const metric = chartMode === 'value' ? stockTotals[name].value : stockTotals[name].shares;
+            sortedStocks.push({ name, metric, rawValue: stockTotals[name].value, rawShares: stockTotals[name].shares });
+            grandTotalMetric += metric;
+        }
+
+        sortedStocks.sort((a, b) => b.metric - a.metric);
+
+        if (sortedStocks.length === 0) {
+            chartContainer.innerHTML = `
+                <div class="text-center py-12 text-stone-500">
+                    <i class="bi bi-folder-x text-4xl block mb-2"></i>
+                </div>
+            `;
+            return;
+        }
+
+        sortedStocks.forEach(item => {
+            const percentage = grandTotalMetric > 0 ? (item.metric / grandTotalMetric) * 100 : 0;
+            const valueDisplay = chartMode === 'value' ? formatCurrency(item.metric) : `${item.metric.toLocaleString()} 股`;
+
+            const bar = document.createElement('div');
+            bar.className = "space-y-1.5 group";
+            bar.innerHTML = `
+                <div class="flex justify-between items-center text-xs">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-gold-300 to-gold-600 block"></span>
+                        <span class="font-bold text-stone-200 group-hover:text-gold-300 transition-colors">${item.name}</span>
+                    </div>
+                    <div class="text-right text-stone-400">
+                        <span class="font-semibold text-stone-200">${valueDisplay}</span>
+                        <span class="text-[10px] text-stone-500 ml-1.5">${percentage.toFixed(1)}%</span>
+                    </div>
+                </div>
+                <div class="w-full h-2.5 bg-stone-900 rounded-full overflow-hidden border border-stone-800/50">
+                    <div class="h-full rounded-full bg-gradient-to-r from-gold-600 via-gold-400 to-amber-300 group-hover:brightness-110 transition-all duration-500" style="width: ${percentage}%"></div>
+                </div>
+            `;
+            chartContainer.appendChild(bar);
+        });
+    }
+
+    function toggleAssetChartMode(mode) {
+        chartMode = mode;
+        const btnValue = document.getElementById('chartBtnValue');
+        const btnShares = document.getElementById('chartBtnShares');
+
+        if (mode === 'value') {
+            btnValue.className = "px-2.5 py-1 text-xs rounded bg-gold-500 text-darkbg-deep font-semibold";
+            btnShares.className = "px-2.5 py-1 text-xs rounded bg-stone-800 text-stone-400 font-semibold hover:bg-stone-700";
+        } else {
+            btnShares.className = "px-2.5 py-1 text-xs rounded bg-gold-500 text-darkbg-deep font-semibold";
+            btnValue.className = "px-2.5 py-1 text-xs rounded bg-stone-800 text-stone-400 font-semibold hover:bg-stone-700";
+        }
+        calculatePortfolioAndStats();
+    }
+
+    // STREAMING_CHUNK: Rendering the Portfolio Card Grid with detailed purchase lots
+    function renderPortfolioGrid(portfolioList) {
+        const grid = document.getElementById('portfolioCardsGrid');
+        grid.innerHTML = '';
+
+        if (portfolioList.length === 0) {
+            grid.innerHTML = `
+                <div class="col-span-full text-center py-16 text-stone-500">
+                    <i class="bi bi-briefcase text-5xl block mb-2 text-stone-600"></i>
+                </div>
+            `;
+            return;
+        }
+
+        portfolioList.sort((a, b) => b.marketValue - a.marketValue);
+
+        portfolioList.forEach(p => {
+            const isProfit = p.pnl >= 0;
+            const pnlClass = isProfit ? 'text-emerald-400' : 'text-red-400';
+            const pnlBg = isProfit ? 'bg-emerald-500/10' : 'bg-red-500/10';
+            const pnlBorder = isProfit ? 'border-emerald-500/20' : 'border-red-500/20';
+
+            let lotsHtml = '';
+            p.lots.forEach(lot => {
+                const lotIsProfit = lot.pnl >= 0;
+                const lotPnlClass = lotIsProfit ? 'text-emerald-400' : 'text-red-400';
+                
+                lotsHtml += `
+                    <div class="flex justify-between items-center bg-stone-950/70 p-2.5 rounded-xl border border-stone-800/40 text-[11px] hover:border-gold-500/25 transition-all">
+                        <div class="space-y-0.5">
+                            <span class="text-stone-500 block font-mono text-[9px]">${lot.timestamp ? lot.timestamp.substring(2, 16) : '--'} 買進</span>
+                            <span class="text-stone-300 font-medium">賸餘 ${lot.remainingShares.toLocaleString()} 股</span>
+                            <span class="text-stone-500 block text-[10px]">成本: ${formatCurrency(lot.buyPrice)}</span>
+                        </div>
+                        <div class="text-right space-y-0.5">
+                            <span class="font-bold ${lotPnlClass} block">
+                                ${lot.pnl >= 0 ? '+' : ''}${formatCurrency(lot.pnl)}
+                            </span>
+                            <span class="inline-block text-[9px] px-1.5 py-0.5 rounded ${lotIsProfit ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}">
+                                ${lot.pnl >= 0 ? '+' : ''}${lot.pnlPct.toFixed(1)}%
+                            </span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const card = document.createElement('div');
+            card.className = "premium-card p-5 rounded-2xl flex flex-col justify-between";
+            card.innerHTML = `
+                <div>
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h4 class="text-lg font-bold text-white flex items-center gap-1.5">
+                                ${p.stock}
+                            </h4>
+                        </div>
+                        <span class="text-xs px-2 py-0.5 rounded-md font-bold uppercase ${p.account === 'W' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'}">
+                            ${p.account} 帳戶
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3.5 my-3 p-3 bg-stone-900/40 rounded-xl border border-stone-800/30">
+                        <div>
+                            <span class="text-[10px] text-stone-500 uppercase block">總持股股數</span>
+                            <span class="text-sm font-semibold text-white">${p.totalShares.toLocaleString()} 股</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-stone-500 uppercase block">均價成本</span>
+                            <span class="text-sm font-semibold text-white">${formatCurrency(p.avgCost)}</span>
+                        </div>
+                        <div class="cursor-pointer hover:bg-stone-800/50 p-1.5 rounded-lg border border-transparent hover:border-gold-500/30 transition-all" onclick="openEditPriceModal('${p.stock}')">
+                            <span class="text-[10px] text-stone-500 uppercase flex items-center gap-1">
+                                模擬現價 <i class="bi bi-pencil-fill text-[8px] text-gold-400"></i>
+                            </span>
+                            <span class="text-sm font-semibold text-gold-400 flex items-center gap-1">
+                                ${formatCurrency(p.simPrice)}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-stone-500 uppercase block">持股合約市值</span>
+                            <span class="text-sm font-semibold text-white">${formatCurrency(p.marketValue)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2.5 pt-3 border-t border-stone-900">
+                    <div class="flex justify-between items-center">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-stone-500 uppercase">總計未實現損益</span>
+                            <span class="text-base font-bold ${pnlClass}">
+                                ${p.pnl >= 0 ? '+' : ''}${formatCurrency(p.pnl)}
+                            </span>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-block px-2.5 py-1 text-xs rounded-lg font-bold ${pnlClass} ${pnlBg} border ${pnlBorder}">
+                                ${p.pnl >= 0 ? '+' : ''}${p.pnlPct.toFixed(2)}%
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5 pt-2 border-t border-stone-800/50">
+                        <span class="text-[9px] uppercase tracking-wider text-stone-500 font-semibold block">分筆買入損益:</span>
+                        <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                            ${lotsHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    // STREAMING_CHUNK: Processing PNL calculation tags for list views
+    function getTransactionPnlHtml(t, simPrice) {
+        const info = calculatedTxPnlMap[t.id];
+        if (!info) {
+            return `<span class="text-stone-600">-</span>`;
+        }
+
+        if (info.type === 'buy') {
+            const curPrice = simPrice || simulatedMarketPrices[t.stock] || t.price;
+            const pnlVal = (curPrice - t.price) * info.remaining;
+            const pnlPct = t.price > 0 ? ((curPrice - t.price) / t.price) * 100 : 0;
+            
+            if (info.remaining > 0) {
+                const isProfit = pnlVal >= 0;
+                return `
+                    <div class="flex flex-col text-[10px]">
+                        <span class="${isProfit ? 'text-emerald-400' : 'text-red-400'} font-bold">
+                            ${pnlVal >= 0 ? '+' : ''}${formatCurrency(pnlVal)}
+                        </span>
+                        <span class="text-stone-500 text-[9px] scale-95 origin-left whitespace-nowrap">
+                            未實現 (餘 ${info.remaining.toLocaleString()}股 / ${pnlPct.toFixed(1)}%)
+                        </span>
+                    </div>
+                `;
+            } else {
+                return `
+                    <span class="text-stone-500 text-[10px] bg-stone-900/60 px-2 py-0.5 rounded border border-stone-800/80">
+                        已全數售出
+                    </span>
+                `;
+            }
+        } else if (info.type === 'sell') {
+            const pnlVal = info.pnl;
+            const isProfit = pnlVal >= 0;
+            return `
+                <div class="flex flex-col text-[10px]">
+                    <span class="${isProfit ? 'text-emerald-400' : 'text-red-400'} font-bold">
+                        ${pnlVal >= 0 ? '+' : ''}${formatCurrency(pnlVal)}
+                    </span>
+                    <span class="text-stone-400 font-semibold text-[9px] scale-95 origin-left whitespace-nowrap">
+                        已實現 (FIFO)
+                    </span>
+                </div>
+            `;
+        }
+        return `<span class="text-stone-600">-</span>`;
+    }
+
+    // STREAMING_CHUNK: Appending dynamic table rows in Dashboard and Ledger pages
+    function renderRecentTransactions() {
+        const table = document.getElementById('recentTransactionsTable');
+        table.innerHTML = '';
+
+        const sorted = [...transactions]
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            .slice(0, 5);
+
+        if (sorted.length === 0) {
+            table.innerHTML = `<tr><td colspan="9" class="py-4 text-center text-stone-500">目前無紀錄</td></tr>`;
+            return;
+        }
+
+        sorted.forEach(t => {
+            const simPrice = simulatedMarketPrices[t.stock] || t.price;
+            const row = document.createElement('tr');
+            row.className = "hover:bg-stone-900/30 transition-colors";
+            row.innerHTML = `
+                <td class="py-3 text-stone-500 font-mono">${t.timestamp ? t.timestamp.substring(5, 16) : '--'}</td>
+                <td class="font-bold text-white">${t.stock}</td>
+                <td>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${t.account === 'W' ? 'bg-amber-500/10 text-amber-400' : 'bg-yellow-500/10 text-yellow-400'}">
+                        ${t.account}
+                    </span>
+                </td>
+                <td>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${t.status === '買進' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
+                        ${t.status}
+                    </span>
+                </td>
+                <td class="font-semibold text-stone-300">${formatCurrency(t.price)}</td>
+                <td class="text-stone-400">${Number(t.shares).toLocaleString()}</td>
+                <td class="py-3">${getTransactionPnlHtml(t, simPrice)}</td>
+                <td class="text-indigo-400 text-[10px]">${t.creatorLabel || '共同成員'}</td>
+                <td class="text-right font-bold text-white">${formatCurrency(Number(t.price) * Number(t.shares))}</td>
+            `;
+            table.appendChild(row);
+        });
+    }
+
+    function renderLedgerTable() {
+        applyLedgerFilters();
+    }
+
+    function applyLedgerFilters() {
+        const searchVal = document.getElementById('ledgerSearchInput').value.toUpperCase();
+        const accountVal = document.getElementById('ledgerFilterAccount').value;
+        const statusVal = document.getElementById('ledgerFilterStatus').value;
+
+        const tableBody = document.getElementById('ledgerTableBody');
+        tableBody.innerHTML = '';
+
+        let filteredList = transactions.filter(t => {
+            const matchSearch = t.stock.toUpperCase().includes(searchVal) || 
+                                (t.creatorLabel && t.creatorLabel.toUpperCase().includes(searchVal));
+            const matchAccount = !accountVal || t.account === accountVal;
+            const matchStatus = !statusVal || t.status === statusVal;
+
+            return matchSearch && matchAccount && matchStatus;
+        });
+
+        filteredList.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        let totalSum = 0;
+        filteredList.forEach((t) => {
+            const subtotal = Number(t.price) * Number(t.shares);
+            totalSum += subtotal;
+
+            const simPrice = simulatedMarketPrices[t.stock] || t.price;
+            const row = document.createElement('tr');
+            row.className = "hover:bg-stone-900/30 transition-all text-xs";
+            row.innerHTML = `
+                <td class="p-4 font-mono text-stone-500">${t.timestamp}</td>
+                <td class="p-4 font-bold text-white">${t.stock}</td>
+                <td class="p-4">
+                    <span class="px-2 py-0.5 rounded-md font-bold text-[10px] ${t.account === 'W' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'}">
+                        ${t.account}
+                    </span>
+                </td>
+                <td class="p-4">
+                    <span class="px-2 py-0.5 rounded-md font-bold text-[10px] ${t.status === '買進' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}">
+                        ${t.status}
+                    </span>
+                </td>
+                <td class="p-4 font-semibold text-stone-300">${formatCurrency(t.price)}</td>
+                <td class="p-4 text-stone-400">${Number(t.shares).toLocaleString()}</td>
+                <td class="p-4 font-bold text-white">${formatCurrency(subtotal)}</td>
+                <td class="p-4">${getTransactionPnlHtml(t, simPrice)}</td>
+                <td class="p-4 text-indigo-400 text-[10px]">${t.creatorLabel || '共同成員'}</td>
+                <td class="p-4 text-center">
+                    <div class="flex items-center justify-center gap-1">
+                        <button onclick="editRecord('${t.id}')" class="text-amber-400 hover:text-amber-300 p-1.5 rounded-lg hover:bg-amber-950/20 transition-all">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button onclick="deleteRecord('${t.id}')" class="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-950/20 transition-all">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        document.getElementById('filteredCount').innerText = filteredList.length;
+        document.getElementById('filteredSum').innerText = formatCurrency(totalSum);
+    }
+
+    function renderSimulationSelector() {
+        const selector = document.getElementById('stockSelectorForSimulation');
+        if (!selector) return;
+        const currentSelection = selector.value;
+        selector.innerHTML = '';
+
+        let stocks = new Set();
+        transactions.forEach(t => stocks.add(t.stock));
+
+        let sortedStocks = Array.from(stocks).sort();
+        sortedStocks.forEach(stock => {
+            const opt = document.createElement('option');
+            opt.value = stock;
+            opt.innerText = stock;
+            selector.appendChild(opt);
+        });
+
+        if (sortedStocks.includes(currentSelection)) {
+            selector.value = currentSelection;
+        }
+
+        loadSelectedStockForSimulation();
+    }
+
+    function loadSelectedStockForSimulation() {
+        const selector = document.getElementById('stockSelectorForSimulation');
+        const priceInput = document.getElementById('simulatedPriceInput');
+        if (selector && selector.value && priceInput) {
+            priceInput.value = simulatedMarketPrices[selector.value] || "";
+        }
+    }
+
+    // STREAMING_CHUNK: Updating price simulations and TWSE OpenAPI pricing feed
+    async function updateSimulatedPrice() {
+        const selector = document.getElementById('stockSelectorForSimulation');
+        const priceInput = document.getElementById('simulatedPriceInput');
+        
+        if (!selector.value) return;
+
+        const newPrice = parseFloat(priceInput.value);
+        if (isNaN(newPrice) || newPrice <= 0) return;
+
+        try {
+            await set(ref(db, `vaults/${currentPin}/prices/${selector.value}`), newPrice);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function syncTwseClosingPrices() {
+        let uniqueStocks = new Set();
+        transactions.forEach(t => {
+            const code = t.stock.trim();
+            if (code) uniqueStocks.add(code);
+        });
+
+        if (uniqueStocks.size === 0) return;
+
+        const btn = document.getElementById('syncTwseBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `<i class="bi bi-arrow-repeat animate-spin"></i> ...`;
+        btn.disabled = true;
+
+        try {
+            const targetUrl = 'https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL';
+            const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`;
+            
+            const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error("API異常");
+            
+            const data = await response.json();
+            
+            let twsePrices = {};
+            data.forEach(item => {
+                if (item.Code) {
+                    const price = parseFloat(String(item.ClosingPrice || '').replace(/,/g, ''));
+                    if (!isNaN(price) && price > 0) {
+                        twsePrices[item.Code] = price;
+                        if (item.Name) {
+                            twsePrices[item.Name.trim()] = price;
+                        }
+                    }
+                }
+            });
+
+            let updateCount = 0;
+            for (let stock of uniqueStocks) {
+                if (twsePrices[stock] !== undefined) {
+                    const newPrice = twsePrices[stock];
+                    await set(ref(db, `vaults/${currentPin}/prices/${stock}`), newPrice);
+                    updateCount++;
+                }
+            }
+
+        } catch (err) {
+            console.error("API 連動失敗:", err);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    function deleteRecord(docId) {
+        const target = transactions.find(t => t.id === docId);
+        if (!target) return;
+
+        showCustomConfirm(
+            "刪除紀錄", 
+            `確認自金庫移除此筆交易紀錄？`, 
+            async () => {
+                try {
+                    await remove(ref(db, `vaults/${currentPin}/ledger/${docId}`));
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+        );
+    }
+
+    function openAddRecordModal() {
+        editingRecordId = null;
+        document.getElementById('addRecordForm').reset();
+        document.getElementById('modalTitle').innerHTML = '<i class="bi bi-file-earmark-plus text-gold-400"></i>新增交易項目';
+        document.getElementById('modalSubmitBtn').innerText = '發布至共同雲端';
+        document.getElementById('formTimestamp').value = ''; 
+        document.getElementById('addRecordModal').classList.remove('hidden');
+    }
+
+    function editRecord(docId) {
+        const t = transactions.find(item => item.id === docId);
+        if (!t) return;
+        editingRecordId = docId;
+
+        document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil-square text-gold-400"></i>編輯交易項目';
+        document.getElementById('modalSubmitBtn').innerText = '廣播修改';
+
+        document.getElementById('formStock').value = t.stock;
+        document.getElementById('formStatus').value = t.status;
+        document.getElementById('formAccount').value = t.account;
+        document.getElementById('formPrice').value = t.price;
+        document.getElementById('formShares').value = t.shares;
+        document.getElementById('formTimestamp').value = t.timestamp;
+
+        document.getElementById('addRecordModal').classList.remove('hidden');
+    }
+
+    function closeAddRecordModal() {
+        document.getElementById('addRecordModal').classList.add('hidden');
+        editingRecordId = null;
+    }
+
+    // STREAMING_CHUNK: Processing transaction record CRUD saves to Database
+    async function saveNewRecord(e) {
+        e.preventDefault();
+        
+        const stock = document.getElementById('formStock').value.trim();
+        const status = document.getElementById('formStatus').value;
+        const account = document.getElementById('formAccount').value;
+        const price = parseFloat(document.getElementById('formPrice').value);
+        const shares = parseInt(document.getElementById('formShares').value);
+        let timestamp = document.getElementById('formTimestamp').value.trim();
+
+        if (!stock || isNaN(price) || isNaN(shares) || price <= 0 || shares <= 0) {
+            return;
+        }
+
+        if (!timestamp) {
+            const now = new Date();
+            timestamp = now.getFullYear() + '-' + 
+                String(now.getMonth()+1).padStart(2,'0') + '-' + 
+                String(now.getDate()).padStart(2,'0') + ' ' + 
+                String(now.getHours()).padStart(2,'0') + ':' + 
+                String(now.getMinutes()).padStart(2,'0') + ':' + 
+                String(now.getSeconds()).padStart(2,'0');
+        }
+
+        const recordData = {
+            timestamp,
+            stock,
+            price,
+            status,
+            shares,
+            account,
+            subtotal: price * shares,
+            createdBy: 'member',
+            creatorLabel: `金庫成員`
+        };
+
+        try {
+            if (editingRecordId === null) {
+                const newRef = push(ref(db, `vaults/${currentPin}/ledger`));
+                await set(newRef, recordData);
+            } else {
+                await set(ref(db, `vaults/${currentPin}/ledger/${editingRecordId}`), recordData);
+            }
+
+            if (typeof simulatedMarketPrices[stock] === 'undefined') {
+                await set(ref(db, `vaults/${currentPin}/prices/${stock}`), price);
+            }
+
+            closeAddRecordModal();
+            document.getElementById('addRecordForm').reset();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function saveQuickRecord(e) {
+        e.preventDefault();
+
+        const stock = document.getElementById('quickStock').value.trim();
+        const account = document.getElementById('quickAccount').value;
+        const status = document.getElementById('quickStatus').value;
+        const price = parseFloat(document.getElementById('quickPrice').value);
+        const shares = parseInt(document.getElementById('quickShares').value);
+
+        if (!stock || isNaN(price) || isNaN(shares) || price <= 0 || shares <= 0) {
+            return;
+        }
+
+        const now = new Date();
+        const timestamp = now.getFullYear() + '-' + 
+            String(now.getMonth()+1).padStart(2,'0') + '-' + 
+            String(now.getDate()).padStart(2,'0') + ' ' + 
+            String(now.getHours()).padStart(2,'0') + ':' + 
+            String(now.getMinutes()).padStart(2,'0') + ':' + 
+            String(now.getSeconds()).padStart(2,'0');
+
+        const newTx = {
+            timestamp,
+            stock,
+            price,
+            status,
+            shares,
+            account,
+            subtotal: price * shares,
+            createdBy: 'member',
+            creatorLabel: `金庫成員`
+        };
+
+        try {
+            const newRef = push(ref(db, `vaults/${currentPin}/ledger`));
+            await set(newRef, newTx);
+
+            if (typeof simulatedMarketPrices[stock] === 'undefined') {
+                await set(ref(db, `vaults/${currentPin}/prices/${stock}`), price);
+            }
+
+            document.getElementById('quickStock').value = '';
+            document.getElementById('quickPrice').value = '';
+            document.getElementById('quickShares').value = '';
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function openEditPriceModal(stockName) {
+        document.getElementById('priceEditStockName').value = stockName;
+        document.getElementById('priceEditStockVal').value = simulatedMarketPrices[stockName] || 0;
+        document.getElementById('editPriceModal').classList.remove('hidden');
+    }
+
+    function closeEditPriceModal() {
+        document.getElementById('editPriceModal').classList.add('hidden');
+    }
+
+    async function saveSimulatedPriceFromModal() {
+        const stock = document.getElementById('priceEditStockName').value;
+        const newPrice = parseFloat(document.getElementById('priceEditStockVal').value);
+        if (isNaN(newPrice) || newPrice <= 0) {
+            return;
+        }
+
+        try {
+            await set(ref(db, `vaults/${currentPin}/prices/${stock}`), newPrice);
+            closeEditPriceModal();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    // STREAMING_CHUNK: Setup Excel parsing using SheetJS
+    function setupDragAndDrop() {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('csvFileInput');
+
+        if (!dropZone || !fileInput) return;
+
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-gold-500', 'bg-gold-950/10');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-gold-500', 'bg-gold-950/10');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-gold-500', 'bg-gold-950/10');
+            const file = e.dataTransfer.files[0];
+            if (file) handleIncomingFile(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleIncomingFile(file);
+        });
+    }
+
+    function handleIncomingFile(file) {
+        const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+        const isCSV = file.name.endsWith('.csv');
+
+        if (!isExcel && !isCSV) {
+            return;
+        }
+
+        if (isExcel) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    const sheetArray = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    parseFileArray(sheetArray);
+                } catch (err) {
+                    console.error(err);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        } else if (isCSV) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const text = e.target.result;
+                    const rows = text.split(/\r?\n/).map(r => {
+                        const cols = r.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || r.split(',');
+                        return cols ? cols.map(c => c.trim().replace(/^["']|["']$/g, '')) : [];
+                    });
+                    parseFileArray(rows);
+                } catch (err) {
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file, 'utf-8');
+        }
+    }
+
+    // STREAMING_CHUNK: Parsing tabular spreadsheet data and sanitizing headers
+    function parseFileArray(rows) {
+        if (rows.length < 2) return;
+
+        const headers = rows[0].map(h => String(h || '').trim().replace(/[\"\']/g, ''));
+        
+        const matchColIndex = (synonyms) => {
+            return headers.findIndex(h => synonyms.some(syn => h.includes(syn) || syn.includes(h)));
+        };
+
+        const colStock = matchColIndex(['股票', '代號', '標的', '名稱', 'Stock', '標的名稱']);
+        const colPrice = matchColIndex(['價格', '單價', '成交單價', '成交價', 'Price']);
+        const colShares = matchColIndex(['股數', '交易股數', '數量', 'Shares', 'Vol']);
+        const colStatus = matchColIndex(['狀態', '交易狀態', '買進/賣出', '類型', 'Status']);
+        const colAccount = matchColIndex(['帳戶', '分配帳戶', '帳號', 'Account']);
+        const colTime = matchColIndex(['時間戳記', '時間', '交易時間', '日期', 'Timestamp', 'Date']);
+
+        const isStatFile = headers.includes('股票') && headers.includes('總計股數') && headers.includes('平均價格');
+
+        if (isStatFile) {
+            const colAvgPrice = headers.indexOf('平均價格');
+            const colTotalShares = headers.indexOf('總計股數');
+            
+            let importedList = [];
+            for (let i = 1; i < rows.length; i++) {
+                const cols = rows[i];
+                if (!cols || cols.length < 3) continue;
+
+                const stock = String(cols[colStock]).trim();
+                const shares = parseInt(cols[colTotalShares]);
+                const avgPrice = parseFloat(cols[colAvgPrice]);
+                if (!stock || isNaN(shares) || isNaN(avgPrice)) continue;
+
+                importedList.push({
+                    timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                    stock: stock,
+                    price: avgPrice,
+                    status: '買進',
+                    shares: shares,
+                    account: 'Q', 
+                    subtotal: avgPrice * shares,
+                    createdBy: 'member',
+                    creatorLabel: 'Excel匯入'
+                });
+            }
+
+            if (importedList.length > 0) {
+                showCustomConfirm("覆蓋目前金庫", `上傳的 Excel 含有匯總資產明細，這將會【完全覆蓋】目前金庫的所有歷史數據！確定繼續嗎？`, async () => {
+                    await overwriteDatabase(importedList);
+                });
+            }
+            return;
+        }
+
+        if (colStock === -1 || colPrice === -1 || colShares === -1) {
+            return;
+        }
+
+        let parsedList = [];
+        for (let i = 1; i < rows.length; i++) {
+            const cols = rows[i];
+            if (!cols || cols.length === 0 || !cols[colStock]) continue;
+
+            const stock = String(cols[colStock]).trim();
+            
+            const rawPriceStr = String(cols[colPrice]).replace(/[\$,\s]/g, '');
+            const rawSharesStr = String(cols[colShares]).replace(/[,]/g, '');
+            
+            const price = parseFloat(rawPriceStr);
+            const shares = parseInt(rawSharesStr);
+            
+            if (!stock || isNaN(price) || isNaN(shares)) continue;
+
+            let timestamp = '';
+            if (colTime !== -1 && cols[colTime]) {
+                const cellVal = cols[colTime];
+                if (cellVal instanceof Date) {
+                    const d = cellVal;
+                    timestamp = d.getFullYear() + '-' + 
+                        String(d.getMonth()+1).padStart(2,'0') + '-' + 
+                        String(d.getDate()).padStart(2,'0') + ' ' + 
+                        String(d.getHours()).padStart(2,'0') + ':' + 
+                        String(d.getMinutes()).padStart(2,'0') + ':' + 
+                        String(d.getSeconds()).padStart(2,'0');
+                } else {
+                    timestamp = String(cellVal).trim();
+                }
+            }
+
+            if (!timestamp || isNaN(Date.parse(timestamp))) {
+                const now = new Date();
+                timestamp = now.getFullYear() + '-' + 
+                    String(now.getMonth()+1).padStart(2,'0') + '-' + 
+                    String(now.getDate()).padStart(2,'0') + ' ' + 
+                    String(now.getHours()).padStart(2,'0') + ':' + 
+                    String(now.getMinutes()).padStart(2,'0') + ':' + 
+                    String(now.getSeconds()).padStart(2,'0');
+            } else {
+                const d = new Date(timestamp);
+                timestamp = d.getFullYear() + '-' + 
+                    String(d.getMonth()+1).padStart(2,'0') + '-' + 
+                    String(d.getDate()).padStart(2,'0') + ' ' + 
+                    String(d.getHours()).padStart(2,'0') + ':' + 
+                    String(d.getMinutes()).padStart(2,'0') + ':' + 
+                    String(d.getSeconds()).padStart(2,'0');
+            }
+
+            let status = colStatus !== -1 && cols[colStatus] ? String(cols[colStatus]).trim() : '買進';
+            if (status.includes('賣')) status = '賣出';
+            else status = '買進';
+
+            let account = colAccount !== -1 && cols[colAccount] ? String(cols[colAccount]).trim().toUpperCase() : 'W';
+            if (!account.includes('Q') && !account.includes('W')) {
+                account = 'W'; 
+            }
+
+            parsedList.push({
+                timestamp,
+                stock,
+                price,
+                status,
+                shares,
+                account,
+                subtotal: price * shares,
+                createdBy: 'member',
+                creatorLabel: 'Excel匯入'
+            });
+        }
+
+        if (parsedList.length > 0) {
+            showCustomConfirm("覆蓋本金庫資料庫", `這份 Excel 包含 ${parsedList.length} 筆明細，這會【完全覆蓋並清除】現有金庫的所有對帳資料。確定覆蓋嗎？`, async () => {
+                await overwriteDatabase(parsedList);
+            });
+        }
+    }
+
+    async function overwriteDatabase(newList) {
+        document.getElementById('dbSyncIndicator').innerText = "上傳中...";
+        try {
+            const dbLedgerRef = ref(db, `vaults/${currentPin}/ledger`);
+            await set(dbLedgerRef, null); 
+            
+            const updates = {};
+            newList.forEach(item => {
+                const newKey = push(dbLedgerRef).key;
+                updates[newKey] = item;
+            });
+            await set(dbLedgerRef, updates);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    // STREAMING_CHUNK: CSV export flows and state resetting
+    function exportToCSV() {
+        if (transactions.length === 0) return;
+
+        let csvContent = "\uFEFF"; 
+        csvContent += "時間戳記,股票,價格,狀態,股數,帳戶,創建者,小計\n";
+
+        transactions.forEach(t => {
+            const subtotal = Number(t.price) * Number(t.shares);
+            const row = `"${t.timestamp}","${t.stock}",${t.price},"${t.status}",${t.shares},"${t.account}","${t.creatorLabel || '成員'}",${subtotal}\n`;
+            csvContent += row;
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `備份_${new Date().toISOString().substring(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function resetToDefaultData() {
+        showCustomConfirm(
+            "重置本金庫資料庫", 
+            `您確定要將金庫上所有的對帳資料完全清除嗎？此操作將會即時清空所有共同編輯者的畫面！`,
+            async () => {
+                document.getElementById('dbSyncIndicator').innerText = "正在清除全網資料...";
+                try {
+                    await set(ref(db, `vaults/${currentPin}/ledger`), null);
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+        );
+    }
+
+    function showCustomConfirm(title, message, onConfirm) {
+        document.getElementById('confirmTitle').innerHTML = `<i class="bi bi-question-circle text-gold-400 mr-2"></i>${title}`;
+        document.getElementById('confirmMessage').innerText = message;
+        
+        const modal = document.getElementById('confirmModal');
+        modal.classList.remove('hidden');
+
+        const okBtn = document.getElementById('confirmOkBtn');
+        const cancelBtn = document.getElementById('confirmCancelBtn');
+
+        const cleanup = () => {
+            modal.classList.add('hidden');
+            okBtn.onclick = null;
+            cancelBtn.onclick = null;
+        };
+
+        okBtn.onclick = () => {
+            onConfirm();
+            cleanup();
+        };
+        cancelBtn.onclick = cleanup;
+    }
+
+    // STREAMING_CHUNK: Multi-tab layout router and global mappings
+    function switchTab(tabId) {
+        currentTab = tabId;
+        
+        document.getElementById('tab-dashboard').classList.add('hidden');
+        document.getElementById('tab-portfolio').classList.add('hidden');
+        document.getElementById('tab-ledger').classList.add('hidden');
+        document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+        document.querySelectorAll('.nav-btn').forEach(nav => {
+             if(!nav.id.includes('mobile')) {
+                nav.className = "nav-btn px-3 py-1.5 rounded-lg text-stone-400 hover:text-gold-300 transition-all";
+             } else {
+                nav.className = "nav-btn flex-1 px-2 py-1.5 rounded-lg text-stone-400 hover:text-gold-300 transition-all text-xs";
+             }
+        });
+
+        const activeBtnDesktop = document.getElementById(`nav-${tabId}`);
+        if(activeBtnDesktop) activeBtnDesktop.className = "nav-btn active px-3 py-1.5 rounded-lg bg-gold-950/40 text-gold-300 border border-gold-800/40 font-medium transition-all";
+        
+        const activeBtnMobile = document.getElementById(`nav-${tabId}-mobile`);
+        if(activeBtnMobile) activeBtnMobile.className = "nav-btn active flex-1 px-2 py-1.5 rounded-lg bg-gold-950/40 text-gold-300 border border-gold-800/40 font-medium transition-all text-xs";
+
+        updateUI();
+    }
+
+    function showAlert(type, msg) {
+        const box = document.getElementById('alertBox');
+        const icon = document.getElementById('alertIcon');
+        const text = document.getElementById('alertMessage');
+
+        if (!box || !icon || !text) return;
+        text.innerText = msg;
+
+        if (type === "success") {
+            box.className = "mb-6 p-4 rounded-xl border bg-emerald-950/40 border-emerald-500/20 text-emerald-400 flex justify-between items-center transition-all duration-300";
+            icon.className = "bi bi-check-circle-fill";
+        } else if (type === "error") {
+            box.className = "mb-6 p-4 rounded-xl border bg-red-950/40 border-red-500/20 text-red-400 flex justify-between items-center transition-all duration-300";
+            icon.className = "bi bi-exclamation-triangle-fill";
+        } else {
+            box.className = "mb-6 p-4 rounded-xl border bg-stone-900 border-stone-800 text-stone-300 flex justify-between items-center transition-all duration-300";
+            icon.className = "bi bi-info-circle-fill";
+        }
+
+        box.classList.remove('hidden');
+    }
+
+    function closeAlert() {
+        const alertBox = document.getElementById('alertBox');
+        if (alertBox) alertBox.classList.add('hidden');
+    }
+
+    // 初始化應用程式啟動檢查
+    window.addEventListener('DOMContentLoaded', initVaultAccess);
+
+    // 將核心功能綁定至全域 window
+    window.handlePasscodeSubmit = handlePasscodeSubmit;
+    window.handleLogout = handleLogout;
+    window.copyDirectLink = copyDirectLink;
+    window.switchTab = switchTab;
+    window.toggleAssetChartMode = toggleAssetChartMode;
+    window.exportToCSV = exportToCSV;
+    window.resetToDefaultData = resetToDefaultData;
+    window.loadSelectedStockForSimulation = loadSelectedStockForSimulation;
+    window.updateSimulatedPrice = updateSimulatedPrice;
+    window.applyLedgerFilters = applyLedgerFilters;
+    window.openAddRecordModal = openAddRecordModal;
+    window.closeAddRecordModal = closeAddRecordModal;
+    window.saveNewRecord = saveNewRecord;
+    window.editRecord = editRecord;
+    window.deleteRecord = deleteRecord;
+    window.saveQuickRecord = saveQuickRecord;
+    window.openEditPriceModal = openEditPriceModal;
+    window.closeEditPriceModal = closeEditPriceModal;
+    window.saveSimulatedPriceFromModal = saveSimulatedPriceFromModal;
+    window.syncTwseClosingPrices = syncTwseClosingPrices;
+    window.navigateToLedgerWithFilter = navigateToLedgerWithFilter;
+    window.closeAlert = closeAlert;
+    window.openChangePasscodeModal = openChangePasscodeModal;
+    window.closeChangePasscodeModal = closeChangePasscodeModal;
+    window.handleChangePasscodeSubmit = handleChangePasscodeSubmit;
+</script>
+
+</body>
+</html>
